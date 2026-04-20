@@ -3,42 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gold Van Life - คุณต้อม</title>
+    <title>Gold Van Life - คุณต้อม (Compact)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8f9fa; }
         .nav-bar { background-color: #bd731d; }
-        .gold-card { border-radius: 16px; border-left: 5px solid #e2e8f0; transition: 0.2s; margin-bottom: 12px; border: 1px solid #eee; }
+        /* ปรับ Card ให้เตี้ยลงและกระชับ */
+        .gold-card { border-radius: 12px; border-left: 4px solid #e2e8f0; transition: 0.2s; margin-bottom: 8px; border-right: 1px solid #eee; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
         .holding { border-left-color: #fbbf24; background-color: #fff; }
-        .available { border-left-color: #e2e8f0; background-color: #fafafa; }
-        .loader { border-top-color: #bd731d; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .available { border-left-color: #cbd5e1; background-color: #fcfcfc; }
     </style>
 </head>
-<body class="pb-24">
-    <div class="max-w-md mx-auto bg-white min-h-screen relative shadow-inner">
-        <header class="p-4 pt-10 border-b sticky top-0 bg-white z-20 shadow-sm">
-            <div class="flex justify-between items-center mb-4">
-                <h1 class="text-xl font-bold text-gray-800 italic">ล็อตทองของคุณต้อม 🚐</h1>
-                <button onclick="fetchInventory()" class="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs">รีเฟรช 🔄</button>
+<body class="pb-20">
+    <div class="max-w-md mx-auto bg-white min-h-screen relative">
+        <header class="p-3 pt-8 border-b sticky top-0 bg-white z-20 shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+                <h1 class="text-lg font-bold text-gray-800 italic">ล็อตทองคุณต้อม 🚐</h1>
+                <button onclick="fetchInventory()" class="text-blue-500 text-[10px] font-bold uppercase">Refresh 🔄</button>
             </div>
-            <div class="bg-yellow-50 p-3 rounded-xl border border-yellow-200">
-                <label class="text-[10px] text-yellow-700 font-bold uppercase tracking-wider">ราคาทองสมมติ (บาทละ):</label>
-                <input type="number" id="mock-price" value="43500" oninput="renderInventory(currentData)" class="w-full mt-1 border border-yellow-300 rounded-lg px-4 py-2 text-xl font-bold text-yellow-800 focus:outline-none">
+            <div class="bg-yellow-50 p-2 rounded-lg border border-yellow-200 flex items-center gap-3">
+                <label class="text-[9px] text-yellow-700 font-bold uppercase leading-tight">ราคาตลาด<br>จำลอง:</label>
+                <input type="number" id="mock-price" value="43500" oninput="renderInventory(currentData)" class="flex-1 bg-white border border-yellow-300 rounded px-2 py-1 text-base font-bold text-yellow-800 focus:outline-none">
             </div>
         </header>
 
-        <div id="loading" class="flex flex-col items-center justify-center p-20">
-            <div class="loader rounded-full border-4 border-gray-100 h-12 w-12 mb-4"></div>
-            <p class="text-sm text-gray-400 italic">กำลังคำนวณข้อมูล...</p>
-        </div>
+        <div id="loading" class="p-10 text-center text-gray-400 text-xs italic">กำลังโหลด...</div>
+        <div id="inventory-grid" class="p-2 hidden"></div>
 
-        <div id="inventory-grid" class="p-3 hidden"></div>
-
-        <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around items-center p-3 text-white text-[10px] rounded-t-2xl shadow-2xl z-30">
+        <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around items-center p-2 text-white text-[9px] rounded-t-xl shadow-2xl z-30">
             <a href="dashboard.html" class="flex flex-col items-center opacity-60"><span>📊</span>รายงาน</a>
-            <a href="index.html" class="flex flex-col items-center border-t-2 border-white pt-1"><span>📝</span>รายการทอง</a>
+            <a href="index.html" class="flex flex-col items-center font-bold"><span>📝</span>รายการทอง</a>
             <div class="flex flex-col items-center opacity-60"><span>➕</span>บันทึกซื้อ</div>
         </nav>
     </div>
@@ -56,7 +51,7 @@
                 renderInventory(currentData);
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('inventory-grid').classList.remove('hidden');
-            } catch (e) { alert("โหลดข้อมูลขัดข้อง"); }
+            } catch (e) { alert("Error!"); }
         }
 
         function renderInventory(data) {
@@ -68,55 +63,49 @@
                 const isHolding = item.status === "HOLDING";
                 const buyPrice = parseFloat(item.buy_price) || 0;
                 const capital = parseFloat(item.capital) || 0;
-                
-                // คำนวณมูลค่าปัจจุบัน
                 let diffPct = 0;
                 let currentTotal = capital;
                 let profitAmt = 0;
 
                 if (isHolding && buyPrice > 0) {
                     diffPct = ((mockPrice - buyPrice) / buyPrice) * 100;
-                    // กำไร = (กำไรต่อบาททอง) * (จำนวนบาททองที่ถือ)
-                    // จำนวนบาททองที่ถือ = capital / buyPrice
                     profitAmt = (mockPrice - buyPrice) * (capital / buyPrice);
                     currentTotal = capital + profitAmt;
                 }
 
                 const card = document.createElement('div');
-                card.className = `gold-card p-4 shadow-sm ${isHolding ? 'holding' : 'available'}`;
+                card.className = `gold-card p-2 px-3 shadow-sm ${isHolding ? 'holding' : 'available'}`;
                 card.innerHTML = `
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <p class="font-bold text-gray-800">ล็อตที่ ${item.lot_id}</p>
-                            <p class="text-[9px] text-gray-400">อัปเดต: ${new Date(item.updated_at).toLocaleDateString('th-TH')}</p>
+                    <div class="flex justify-between items-center">
+                        <div class="w-1/4">
+                            <p class="text-[11px] font-bold text-gray-800">LOT ${item.lot_id}</p>
+                            <p class="text-[8px] text-gray-400 font-light">${isHolding ? 'ถือทอง' : 'ว่าง'}</p>
                         </div>
-                        <div class="flex items-center gap-2">
-                            ${isHolding ? `
-                                <span class="text-[10px] px-2 py-0.5 rounded-md font-bold ${diffPct >= 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">
-                                    ${diffPct >= 0 ? '▲' : '▼'} ${Math.abs(diffPct).toFixed(2)}%
-                                </span>
-                            ` : ''}
-                            <button onclick="handleAction(${item.lot_id}, '${isHolding ? 'SELL' : 'BUY'}', ${capital}, ${currentTotal.toFixed(0)})" 
-                                class="${isHolding ? 'bg-red-500' : 'bg-blue-600'} text-white px-5 py-1.5 rounded-full text-xs font-bold shadow-md">
-                                ${isHolding ? 'ขาย' : 'ซื้อ'}
-                            </button>
+                        
+                        <div class="w-1/3 text-center">
+                            <p class="text-[8px] text-gray-400 uppercase">เงินลงทุน</p>
+                            <p class="text-[12px] font-bold text-blue-900 leading-none">฿${Number(capital).toLocaleString()}</p>
+                            <p class="text-[8px] text-gray-400 mt-0.5">${isHolding ? 'ทุน: ' + Number(buyPrice).toLocaleString() : '-'}</p>
                         </div>
-                    </div>
 
-                    <div class="grid grid-cols-2 gap-2 border-t pt-3">
-                        <div>
-                            <p class="text-[10px] text-gray-400 uppercase">เงินลงทุนต้น</p>
-                            <p class="text-sm font-bold text-blue-900 underline">฿${Number(capital).toLocaleString()}</p>
-                            <p class="text-[9px] text-gray-400 mt-1 italic italic">ทุน/บาท: ${Number(buyPrice).toLocaleString()}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] text-gray-400 uppercase">${isHolding ? 'มูลค่าวันนี้ (รวมกำไร)' : 'รอเปิดล็อต'}</p>
-                            <p class="text-sm font-bold ${diffPct >= 0 ? 'text-green-600' : 'text-red-600'}">
+                        <div class="w-1/3 text-right pr-2">
+                            <p class="text-[8px] text-gray-400 uppercase">${isHolding ? 'มูลค่าวันนี้' : 'รอซื้อ'}</p>
+                            <p class="text-[12px] font-bold ${diffPct >= 0 ? 'text-green-600' : 'text-red-600'} leading-none">
                                 ${isHolding ? '฿' + Math.round(currentTotal).toLocaleString() : '-'}
                             </p>
-                            <p class="text-[9px] font-medium mt-1 ${diffPct >= 0 ? 'text-green-500' : 'text-red-500'}">
-                                ${isHolding ? (profitAmt >= 0 ? '+' : '') + Math.round(profitAmt).toLocaleString() : ''}
-                            </p>
+                            <div class="flex justify-end gap-1 items-center mt-0.5">
+                                ${isHolding ? `
+                                    <span class="text-[8px] font-bold ${diffPct >= 0 ? 'text-green-500' : 'text-red-500'}">${diffPct >= 0 ? '+' : ''}${Math.round(profitAmt)}</span>
+                                    <span class="text-[8px] px-1 rounded bg-gray-50 font-bold ${diffPct >= 0 ? 'text-green-600' : 'text-red-600'}">${diffPct.toFixed(1)}%</span>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <div class="flex-none">
+                            <button onclick="handleAction(${item.lot_id}, '${isHolding ? 'SELL' : 'BUY'}', ${capital}, ${currentTotal.toFixed(0)})" 
+                                class="${isHolding ? 'bg-red-500' : 'bg-blue-600'} text-white w-12 py-2 rounded-lg text-[10px] font-bold shadow-sm active:scale-95 transition uppercase">
+                                ${isHolding ? 'ขาย' : 'ซื้อ'}
+                            </button>
                         </div>
                     </div>
                 `;
@@ -126,15 +115,14 @@
 
         async function handleAction(lotId, type, capital, estTotal) {
             if (type === 'BUY') {
-                const cap = prompt(`ล็อตที่ ${lotId}: ระบุเงินต้น (บาท)`, "10000");
-                const price = prompt(`ล็อตที่ ${lotId}: ราคาทองขณะซื้อ (บาทละ)`, document.getElementById('mock-price').value);
+                const cap = prompt(`ล็อตที่ ${lotId}: ทุน (บาท)`, "10000");
+                const price = prompt(`ล็อตที่ ${lotId}: ราคาตลาด`, document.getElementById('mock-price').value);
                 if (cap && price) await send({ action: "BUY", lotId, capital: cap, buyPrice: price });
             } else {
-                // เอายอดมูลค่าวันนี้ที่คำนวณได้ ไปเป็นค่าตั้งต้นใน prompt
-                const rec = prompt(`ล็อตที่ ${lotId}: เงินต้น ฿${capital.toLocaleString()}\nมูลค่าคาดการณ์: ฿${estTotal.toLocaleString()}\nระบุยอดเงินที่ขายได้จริง (รวมต้น+กำไร):`, estTotal);
+                const rec = prompt(`ล็อตที่ ${lotId}: เงินต้น ฿${capital.toLocaleString()}\nคาดการณ์: ฿${estTotal.toLocaleString()}\nระบุยอดเงินขายจริง:`, estTotal);
                 if (rec) {
                     const profit = parseFloat(rec) - capital - 10;
-                    if (confirm(`ยืนยันการบันทึกขายล็อตที่ ${lotId}\nเงินต้น: ฿${capital.toLocaleString()}\nยอดขายจริง: ฿${parseFloat(rec).toLocaleString()}\nกำไรสุทธิ: ฿${profit.toLocaleString()}\n(หักค่าธรรมเนียม 10 บาทแล้ว)`)) {
+                    if (confirm(`ยืนยันการขาย LOT ${lotId}\nยอดขาย: ฿${parseFloat(rec).toLocaleString()}\nกำไรสุทธิ: ฿${profit.toLocaleString()}`)) {
                         await send({ action: "SELL", lotId, totalReceived: rec });
                     }
                 }
@@ -145,10 +133,7 @@
             document.getElementById('loading').classList.remove('hidden');
             const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) });
             const result = await res.json();
-            if (result.status === "success") {
-                alert(`✅ บันทึกล็อตที่ ${payload.lotId} เรียบร้อย!`);
-                fetchInventory();
-            }
+            if (result.status === "success") { alert(`สำเร็จ!`); fetchInventory(); }
         }
 
         window.onload = fetchInventory;
