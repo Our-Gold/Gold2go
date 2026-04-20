@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gold Van Life - persistent Alert</title>
+    <title>Gold Van Life - Thom Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -63,7 +63,7 @@
         }
 
         function formatDateShort(dateString) {
-            if (!dateString || dateString === 0) return "";
+            if (!dateString || dateString === 0) return "-";
             const date = new Date(dateString);
             return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear() + 543}`;
         }
@@ -91,7 +91,7 @@
                     ${(diff >= 5 || diff <= -3) ? `<button onclick="muteAlert(${item.lot_id})" class="btn-mute" title="รับทราบ">OK</button>` : ''}
                     <div class="flex justify-between items-center">
                         <div class="w-1/4">
-                            <p class="text-[7px] text-gray-400 leading-none mb-1 font-medium">${dateShort}</p>
+                            <p class="text-[8px] text-gray-400 uppercase leading-none mb-1">${dateShort}</p>
                             <p class="text-[11px] font-bold text-gray-800 leading-none">LOT ${item.lot_id}</p>
                             <p class="text-[8px] ${isMuted ? 'text-gray-400' : 'text-yellow-600'} font-medium italic mt-1 leading-none">${isMuted ? 'MUTED' : 'HOLDING'}</p>
                         </div>
