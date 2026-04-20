@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard - สรุปกำไรคุณต้อม</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #f8f9fa; }
+        .nav-bar { background-color: #bd731d; }
+        .stat-card { border-radius: 15px; background: white; border: 1px solid #edf2f7; }
+        .loader { border-top-color: #bd731d; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="pb-24">
+    <div class="max-w-md mx-auto min-h-screen">
+        
+        <header class="p-5 pt-10 border-b bg-white flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-800">📊 สรุปรายงานกำไร</h1>
+            <button onclick="loadDashboardData()" class="text-blue-600 text-xs font-medium">รีเฟรช 🔄</button>
+        </header>
+
+        <div id="loading" class="p-20 flex flex-col items-center">
+            <div class="loader rounded-full border-4 border-gray-100 h-10 w-10 mb-2"></div>
+            <p class="text-xs text-gray-400">กำลังรวบรวมกำไรสะสม...</p>
+        </div>
+
+        <div id="dashboard-content" class="p-4 space-y-4 hidden">
+            
+            <div class="stat-card p-5 shadow-sm bg-gradient-to-br from-white to-green-50 border-l-4 border-green-500">
+                <p class="text-xs text-gray-500 uppercase tracking-wider">กำไรสุทธิทั้งหมด</p>
+                <h2 id="total-profit" class="text-3xl font-bold text-green-600 mt-1">฿0</h2>
+                <p class="text-[10px] text-gray-400 mt-2 italic">* หักค่าธรรมเนียมถาดละ 10 บาทแล้ว</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="stat-card p-4 shadow-sm">
+                    <p class="text-[10px] text-gray-400 uppercase">จำนวนครั้งที่ขาย</p>
+                    <p id="trade-count" class="text-xl font-bold text-gray-800">0 รอบ</p>
+                </div>
+                <div class="stat-card p-4 shadow-sm">
+                    <p class="text-[10px] text-gray-400 uppercase">เงินทุนหมุนเวียน</p>
+                    <p id="total-capital" class="text-xl font-bold text-blue-800">฿0</p>
+                </div>
+            </div>
+
+            <div class="stat-card p-4 shadow-sm">
+                <h3 class="text-sm font-semibold text-gray-700 mb-4 border-b pb-2">ผลงานตามช่วงเวลา</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600 font-light">กำไรเดือนนี้</span>
+                        <span id="profit-month" class="text-sm font-bold text-gray-800">฿0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600 font-light">สะสม 3 เดือน</span>
+                        <span id="profit-3months" class="text-sm font-bold text-gray-800">฿0</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-dashed">
+                        <span class="text-sm text-gray-600 font-light">สะสมรายปี (2026)</span>
+                        <span id="profit-year" class="text-lg font-bold text-green-600">฿0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card p-4 shadow-sm">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">ประวัติการขายล่าสุด</h3>
+                <div id="sales-history" class="space-y-2 max-h-60 overflow-y-auto">
+                    </div>
+            </div>
+
+        </div>
+
+        <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around p-3 text-white text-[10px] rounded-t-xl shadow-2xl">
+            <a href="dashboard.html" class="flex flex-col items-center">
+                <span class="text-xl">📊</span>รายงาน
+            </a>
+            <a href="index.html" class="flex-1 flex flex-col items-center opacity-60">
+                <span class="text-xl">📝</span>รายการทอง
+            </a>
+            <div class="flex flex-col items-center opacity-60">
+                <span class="text-xl">➕</span>บันทึกซื้อ
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        // *** ใส่ URL Web App ของคุณต้อมตรงนี้ ***
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwxO6Gp-yzSF2QDlLRsm7-B31HmRHWRLD4qa-1KsvUHrMJPKUUsmXT9WqOMlN0UZFhAEg/exec";
+
+        async function loadDashboardData() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('dashboard-content').classList.add('hidden');
+
+            try {
+                // ดึงข้อมูลจากชีท sales_log โดยส่ง parameter page=sales_log
+                const res = await fetch(`${WEB_APP_URL}?page=sales_log`);
+                const salesData = await res.json();
+                
+                processStats(salesData);
+            } catch (e) {
+                alert("โหลดข้อมูลล้มเหลว กรุณาตรวจสอบการตั้งค่า");
+            }
+        }
+
+        function processStats(data) {
+            let totalProfit = 0;
+            let totalCap = 0;
+            let profitMonth = 0;
+            let profit3Months = 0;
+            let profitYear = 0;
+
+            const now = new Date();
+            const historyDiv = document.getElementById('sales-history');
+            historyDiv.innerHTML = "";
+
+            // เรียงจากวันที่ใหม่ไปเก่า
+            data.sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date));
+
+            data.forEach(log => {
+                const saleDate = new Date(log.sale_date);
+                const profit = parseFloat(log.net_profit);
+                const cap = parseFloat(log.cost_value);
+
+                totalProfit += profit;
+                totalCap += cap;
+
+                // เช็คช่วงเวลา
+                const diffMonths = (now.getFullYear() - saleDate.getFullYear()) * 12 + (now.getMonth() - saleDate.getMonth());
+                
+                if (diffMonths === 0) profitMonth += profit;
+                if (diffMonths < 3) profit3Months += profit;
+                if (saleDate.getFullYear() === now.getFullYear()) profitYear += profit;
+
+                // สร้างประวัติแบบย่อ
+                const logRow = document.createElement('div');
+                logRow.className = "flex justify-between items-center text-[11px] p-2 bg-gray-50 rounded-lg";
+                logRow.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-gray-400 uppercase font-bold">ล็อต ${log.lot_id}</span>
+                        <span class="text-gray-500">${saleDate.toLocaleDateString('th-TH', {day:'numeric', month:'short'})}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-green-600 font-bold">+฿${profit.toLocaleString()}</span>
+                        <p class="text-[9px] text-gray-400">จากต้น ฿${cap.toLocaleString()}</p>
+                    </div>
+                `;
+                historyDiv.appendChild(logRow);
+            });
+
+            // อัปเดตตัวเลขหน้าจอ
+            document.getElementById('total-profit').innerText = `฿${totalProfit.toLocaleString()}`;
+            document.getElementById('trade-count').innerText = `${data.length} รอบ`;
+            document.getElementById('total-capital').innerText = `฿${totalCap.toLocaleString()}`;
+            document.getElementById('profit-month').innerText = `฿${profitMonth.toLocaleString()}`;
+            document.getElementById('profit-3months').innerText = `฿${profit3Months.toLocaleString()}`;
+            document.getElementById('profit-year').innerText = `฿${profitYear.toLocaleString()}`;
+
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+        }
+
+        window.onload = loadDashboardData;
+    </script>
+</body>
+</html>
