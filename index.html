@@ -63,8 +63,9 @@
         }
 
         function formatDateShort(dateString) {
-            if (!dateString || dateString === 0) return "-";
+            if (!dateString || dateString === 0 || dateString === "0") return "-";
             const date = new Date(dateString);
+            if (isNaN(date.getTime())) return "-";
             return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear() + 543}`;
         }
 
@@ -77,13 +78,16 @@
                 maxLotId = Math.max(...data.map(item => parseInt(item.lot_id) || 0));
             }
             renderNewLotButton(grid, maxLotId + 1);
+            
             data.filter(item => item.status === "HOLDING").sort((a, b) => b.lot_id - a.lot_id).forEach(item => {
                 const buyP = parseFloat(item.buy_price) || 0;
                 const cap = parseFloat(item.capital) || 0;
                 const diff = ((mockPrice - buyP) / buyP) * 100;
                 const profit = (mockPrice - buyP) * (cap / buyP);
                 const isMuted = item.is_muted;
-                const dateShort = formatDateShort(item.timestamp);
+                
+                // ดึงข้อมูลตามชื่อคอลัมน์ buy_date ที่ส่งมาจาก Apps Script
+                const dateShort = formatDateShort(item.buy_date); 
 
                 const card = document.createElement('div');
                 card.className = `gold-card p-2 px-3 shadow-sm holding ${isMuted ? 'muted' : ''}`;
