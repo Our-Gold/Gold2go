@@ -3,196 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gold Van Life - Dashboard Report</title>
+    <title>Gold Van Life - Dashboard Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f0f2f5; }
         .nav-bar { background-color: #bd731d; }
-        .stat-card { background: white; border-radius: 16px; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .chart-container { position: relative; height: 200px; width: 100%; }
+        .stat-card { background: white; border-radius: 16px; padding: 1.25rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body class="pb-24">
     <div class="max-w-md mx-auto min-h-screen relative shadow-lg bg-white">
-        <header class="p-6 bg-white border-b sticky top-0 z-20 shadow-sm">
-            <h1 class="text-2xl font-bold text-gray-800">รายงานผล 📊</h1>
-            <p class="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold">Gold Van Life Management</p>
+        <header class="p-6 bg-white border-b text-center">
+            <h1 class="text-2xl font-bold text-gray-800">รายงานพอร์ต 📊</h1>
         </header>
-
-        <div id="loading" class="p-10 text-center text-gray-400 text-sm italic">
-            กำลังประมวลผลข้อมูลพอร์ตคุณต้อม...
-        </div>
-
-        <div id="dashboard-content" class="p-4 space-y-4 hidden">
-            <div class="grid grid-cols-2 gap-2 text-center">
-                <div class="bg-red-50 p-2 rounded-lg border border-red-100">
-                    <p class="text-[9px] text-red-600 font-bold uppercase">ราคารับซื้อ (Sync)</p>
-                    <p class="text-lg font-bold text-red-700" id="live-buy">0</p>
-                </div>
-                <div class="bg-green-50 p-2 rounded-lg border border-green-100">
-                    <p class="text-[9px] text-green-600 font-bold uppercase">ราคาขายออก (Sync)</p>
-                    <p class="text-lg font-bold text-green-700" id="live-sell">0</p>
-                </div>
+        <div id="content" class="p-4 space-y-4">
+            <div class="stat-card text-center border-t-4 border-yellow-500">
+                <p class="text-xs text-gray-400 uppercase font-bold">กำไร/ขาดทุนสุทธิวันนี้</p>
+                <p class="text-4xl font-black mt-2" id="total-profit">฿0</p>
+                <div class="inline-flex items-center px-4 py-1 rounded-full mt-2 text-sm font-bold" id="profit-pct">0%</div>
             </div>
-
-            <div class="stat-card text-center border-t-4 border-yellow-400">
-                <p class="text-xs text-gray-400 uppercase font-bold tracking-wider">กำไร / ขาดทุน รวมทั้งหมด</p>
-                <p class="text-4xl font-black mt-2 transition-all" id="total-profit">฿0</p>
-                <div class="inline-flex items-center px-3 py-1 rounded-full mt-2 bg-gray-100 text-sm font-bold" id="total-profit-pct">
-                    0%
-                </div>
-            </div>
-
             <div class="grid grid-cols-2 gap-4">
-                <div class="stat-card">
-                    <p class="text-[10px] text-gray-400 uppercase font-bold">เงินต้นที่ลงทุน</p>
-                    <p class="text-lg font-bold text-blue-900 mt-1" id="total-capital">฿0</p>
-                </div>
-                <div class="stat-card">
-                    <p class="text-[10px] text-gray-400 uppercase font-bold">มูลค่าประเมิน</p>
-                    <p class="text-lg font-bold text-gray-800 mt-1" id="total-value">฿0</p>
-                </div>
+                <div class="stat-card"><p class="text-[10px] text-gray-400 uppercase font-bold">เงินลงทุนรวม</p><p class="text-xl font-bold text-blue-900" id="total-cap">฿0</p></div>
+                <div class="stat-card"><p class="text-[10px] text-gray-400 uppercase font-bold">มูลค่าพอร์ตปัจจุบัน</p><p class="text-xl font-bold text-gray-800" id="total-val">฿0</p></div>
             </div>
-
-            <div class="stat-card">
-                <p class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                    <span>🟡</span> สัดส่วน LOT ทองคำ
-                </p>
-                <div class="chart-container">
-                    <canvas id="portfolioChart"></canvas>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-100">
-                    <p class="text-[9px] text-gray-400 font-bold uppercase">ล็อตที่ถือครอง</p>
-                    <p class="text-xl font-bold text-yellow-600" id="holding-lots">0</p>
-                </div>
-                <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-100">
-                    <p class="text-[9px] text-gray-400 font-bold uppercase">ล็อตที่ว่าง</p>
-                    <p class="text-xl font-bold text-gray-400" id="available-lots">0</p>
-                </div>
+            <div class="stat-card text-center">
+                <p class="text-[10px] text-gray-400 font-bold mb-2">อ้างอิงราคา InterGOLD</p>
+                <div class="flex justify-around"><p class="text-red-600 font-bold" id="live-buy">0</p><p class="text-green-600 font-bold" id="live-sell">0</p></div>
             </div>
         </div>
-
-        <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around items-center p-4 text-white text-[10px] rounded-t-2xl shadow-2xl z-30">
-            <a href="dashboard.html" class="flex flex-col items-center font-bold text-white no-underline">
-                <span class="text-xl mb-1">📊</span>
-                <span>รายงาน</span>
-            </a>
-            <a href="index.html" class="flex flex-col items-center opacity-60 text-white no-underline">
-                <span class="text-xl mb-1">📝</span>
-                <span>รายการทอง</span>
-            </a>
-            <a href="goldprice.html" class="flex flex-col items-center opacity-60 text-white no-underline">
-                <span class="text-xl mb-1">💰</span>
-                <span>เช็คราคา</span>
-            </a>
+        <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around items-center p-4 text-white text-[10px] rounded-t-2xl z-30">
+            <a href="dashboard.html" class="flex flex-col items-center font-bold text-white no-underline">📊<span>รายงาน</span></a>
+            <a href="index.html" class="flex flex-col items-center opacity-60 text-white no-underline">📝<span>รายการทอง</span></a>
         </nav>
     </div>
-
     <script>
-        // ใช้ WEB_APP_URL ตัวเดิมที่คุณต้อม Deploy ไว้
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyXc05X4UE5Zz4yyCQDMctFJKoGSlU5JA5S5euGriBIEK3gOlQQJp0fO4liG4JBdeyLOg/exec";
-        let myChart = null;
-
-        async function loadDashboardData() {
-            try {
-                document.getElementById('loading').classList.remove('hidden');
-                document.getElementById('dashboard-content').classList.add('hidden');
-
-                // 1. ดึงราคาคู่ Buy/Sell ปัจจุบัน
-                const pRes = await fetch(`${WEB_APP_URL}?page=live_price`);
-                const pData = await pRes.json();
-                const currentBuyBack = parseFloat(pData.buy);
-                
-                document.getElementById('live-buy').innerText = currentBuyBack.toLocaleString();
-                document.getElementById('live-sell').innerText = Number(pData.sell).toLocaleString();
-
-                // 2. ดึงข้อมูลพอร์ต inventory
-                const res = await fetch(`${WEB_APP_URL}?page=inventory`);
-                const inventory = await res.json();
-                
-                processAndDisplay(inventory, currentBuyBack);
-                
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('dashboard-content').classList.remove('hidden');
-            } catch (e) {
-                document.getElementById('loading').innerHTML = "❌ การเชื่อมต่อล้มเหลว กรุณาลองใหม่";
-            }
-        }
-
-        function processAndDisplay(data, buyBackPrice) {
-            let totalCapital = 0;
-            let totalCurrentProfit = 0;
-            let holdingCount = 0;
-            let availableCount = 0;
-
-            data.forEach(item => {
-                if (item.status === "HOLDING") {
-                    const cap = parseFloat(item.capital) || 0;
-                    const cost = parseFloat(item.buy_price) || 0;
-                    totalCapital += cap;
-                    if (cost > 0) {
-                        // กำไรคำนวณจากราคารับซื้อสมาคม
-                        totalCurrentProfit += (buyBackPrice - cost) * (cap / cost);
-                    }
-                    holdingCount++;
-                } else {
-                    availableCount++;
-                }
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxJHieUe3b1zFhNe_cNRI9carKqdErE2QZHgXIG7Zqy2VHe-ugBWIThZACex4YNBgFS9g/exec";
+        async function load() {
+            const pRes = await fetch(`${WEB_APP_URL}?page=live_price`);
+            const pData = await pRes.json();
+            const curBuy = parseFloat(pData.buy);
+            document.getElementById('live-buy').innerText = "รับซื้อ: " + curBuy.toLocaleString();
+            document.getElementById('live-sell').innerText = "ขายออก: " + Number(pData.sell).toLocaleString();
+            const res = await fetch(`${WEB_APP_URL}?page=inventory`);
+            const inv = await res.json();
+            let cap = 0, profit = 0;
+            inv.filter(i => i.status === "HOLDING").forEach(i => {
+                const c = parseFloat(i.capital) || 0;
+                const b = parseFloat(i.buy_price) || 0;
+                cap += c;
+                if (b > 0) profit += (curBuy - b) * (c / b);
             });
-
-            const totalValue = totalCapital + totalCurrentProfit;
-            const totalProfitPct = totalCapital > 0 ? (totalCurrentProfit / totalCapital) * 100 : 0;
-
-            // อัปเดตตัวเลขบนหน้าจอ
-            document.getElementById('total-capital').innerText = `฿${Math.round(totalCapital).toLocaleString()}`;
-            document.getElementById('total-value').innerText = `฿${Math.round(totalValue).toLocaleString()}`;
-            document.getElementById('holding-lots').innerText = holdingCount;
-            document.getElementById('available-lots').innerText = availableCount;
-
-            const profitElem = document.getElementById('total-profit');
-            profitElem.innerText = `${totalCurrentProfit >= 0 ? '+' : ''}฿${Math.round(totalCurrentProfit).toLocaleString()}`;
-            profitElem.className = `text-4xl font-black mt-2 ${totalCurrentProfit >= 0 ? 'text-green-600' : 'text-red-600'}`;
-            
-            const pctElem = document.getElementById('total-profit-pct');
-            pctElem.innerText = `${totalCurrentProfit >= 0 ? '+' : ''}${totalProfitPct.toFixed(2)}%`;
-            pctElem.className = `inline-flex items-center px-3 py-1 rounded-full mt-2 text-sm font-bold ${totalCurrentProfit >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
-
-            updateChart(holdingCount, availableCount);
+            document.getElementById('total-cap').innerText = `฿${Math.round(cap).toLocaleString()}`;
+            document.getElementById('total-val').innerText = `฿${Math.round(cap + profit).toLocaleString()}`;
+            const pElem = document.getElementById('total-profit');
+            pElem.innerText = `${profit >= 0 ? '+' : ''}฿${Math.round(profit).toLocaleString()}`;
+            pElem.className = `text-4xl font-black mt-2 ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            const pctElem = document.getElementById('profit-pct');
+            const pct = cap > 0 ? (profit / cap) * 100 : 0;
+            pctElem.innerText = `${pct.toFixed(2)}%`;
+            pctElem.className = `inline-flex items-center px-4 py-1 rounded-full mt-2 text-sm font-bold ${profit >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
         }
-
-        function updateChart(holding, available) {
-            const ctx = document.getElementById('portfolioChart').getContext('2d');
-            if (myChart) myChart.destroy();
-
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['ถือครอง', 'ว่าง'],
-                    datasets: [{
-                        data: [holding, available],
-                        backgroundColor: ['#fbbf24', '#e5e7eb'],
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
-                    },
-                    cutout: '75%'
-                }
-            });
-        }
-
-        // เริ่มทำงานเมื่อโหลดหน้าจอ
-        window.onload = loadDashboardData;
+        window.onload = load;
     </script>
 </body>
 </html>
