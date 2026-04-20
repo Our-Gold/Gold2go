@@ -1,247 +1,198 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Gold Van Life - Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    body { font-family: 'Kanit', sans-serif; background: #f4f5f7; }
-    .app-shell { max-width: 500px; margin: 0 auto; background: #fff; min-height: 100vh; box-shadow: 0 0 0 1px rgba(0,0,0,0.03); }
-    .nav-bar { background: #bd731d; }
-    .soft-card {
-      border-radius: 18px;
-      border: 1px solid #ececec;
-      background: #fff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gold Van Life - Dashboard Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #f0f2f5; }
+        .nav-bar { background-color: #bd731d; }
+        .stat-card { background: white; border-radius: 16px; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .chart-container { position: relative; height: 200px; width: 100%; }
+    </style>
 </head>
-<body>
-  <div class="app-shell pb-24">
-    <header class="sticky top-0 z-20 bg-white border-b px-4 pt-7 pb-4">
-      <div class="flex items-center justify-between">
-        <h1 class="text-[20px] font-bold text-slate-800">📊 สรุปรายงานกำไร</h1>
-        <button id="refreshBtn" class="text-blue-600 text-[11px] font-bold uppercase tracking-wide">รีเฟรช 🔄</button>
-      </div>
-    </header>
+<body class="pb-24">
+    <div class="max-w-md mx-auto min-h-screen relative shadow-lg bg-white">
+        <header class="p-6 bg-white border-b sticky top-0 z-20 shadow-sm">
+            <h1 class="text-2xl font-bold text-gray-800">รายงานผล 📊</h1>
+            <p class="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold">Gold Van Life Management</p>
+        </header>
 
-    <main class="p-4">
-      <div id="loading" class="text-center text-slate-400 text-xs italic py-10">กำลังโหลดข้อมูล...</div>
-      <div id="dashboard" class="hidden space-y-4">
-        <div class="soft-card border-2 border-green-400 p-5">
-          <p class="text-[12px] text-slate-400">กำไรสุทธิทั้งหมด</p>
-          <p id="totalProfit" class="text-[42px] font-bold text-green-500 leading-none mt-2">฿0</p>
-          <p class="text-[11px] text-slate-300 mt-3">* รวมจากประวัติการขายทั้งหมด</p>
+        <div id="loading" class="p-10 text-center text-gray-400 text-sm italic">
+            กำลังประมวลผลข้อมูลพอร์ตคุณต้อม...
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div class="soft-card p-4">
-            <p class="text-[12px] text-slate-400">จำนวนครั้งที่ขาย</p>
-            <p id="sellCount" class="text-[24px] font-bold text-slate-900 mt-2">0 รอบ</p>
-          </div>
-          <div class="soft-card p-4">
-            <p class="text-[12px] text-slate-400">เงินขายรวมคืนมา</p>
-            <p id="capitalRecovered" class="text-[24px] font-bold text-blue-700 mt-2">฿0</p>
-          </div>
+        <div id="dashboard-content" class="p-4 space-y-4 hidden">
+            <div class="grid grid-cols-2 gap-2 text-center">
+                <div class="bg-red-50 p-2 rounded-lg border border-red-100">
+                    <p class="text-[9px] text-red-600 font-bold uppercase">ราคารับซื้อ (Sync)</p>
+                    <p class="text-lg font-bold text-red-700" id="live-buy">0</p>
+                </div>
+                <div class="bg-green-50 p-2 rounded-lg border border-green-100">
+                    <p class="text-[9px] text-green-600 font-bold uppercase">ราคาขายออก (Sync)</p>
+                    <p class="text-lg font-bold text-green-700" id="live-sell">0</p>
+                </div>
+            </div>
+
+            <div class="stat-card text-center border-t-4 border-yellow-400">
+                <p class="text-xs text-gray-400 uppercase font-bold tracking-wider">กำไร / ขาดทุน รวมทั้งหมด</p>
+                <p class="text-4xl font-black mt-2 transition-all" id="total-profit">฿0</p>
+                <div class="inline-flex items-center px-3 py-1 rounded-full mt-2 bg-gray-100 text-sm font-bold" id="total-profit-pct">
+                    0%
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="stat-card">
+                    <p class="text-[10px] text-gray-400 uppercase font-bold">เงินต้นที่ลงทุน</p>
+                    <p class="text-lg font-bold text-blue-900 mt-1" id="total-capital">฿0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-[10px] text-gray-400 uppercase font-bold">มูลค่าประเมิน</p>
+                    <p class="text-lg font-bold text-gray-800 mt-1" id="total-value">฿0</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <p class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                    <span>🟡</span> สัดส่วน LOT ทองคำ
+                </p>
+                <div class="chart-container">
+                    <canvas id="portfolioChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-100">
+                    <p class="text-[9px] text-gray-400 font-bold uppercase">ล็อตที่ถือครอง</p>
+                    <p class="text-xl font-bold text-yellow-600" id="holding-lots">0</p>
+                </div>
+                <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-100">
+                    <p class="text-[9px] text-gray-400 font-bold uppercase">ล็อตที่ว่าง</p>
+                    <p class="text-xl font-bold text-gray-400" id="available-lots">0</p>
+                </div>
+            </div>
         </div>
 
-        <div class="soft-card p-4">
-          <h2 class="text-[14px] font-bold text-slate-800 mb-4">ผลงานตามช่วงเวลา</h2>
-          <div class="space-y-4 text-[15px]">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-              <span class="text-slate-500">กำไรเดือนนี้</span>
-              <span id="monthProfit" class="font-bold text-slate-900">฿0</span>
-            </div>
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-              <span class="text-slate-500">สะสม 3 เดือน</span>
-              <span id="threeMonthProfit" class="font-bold text-slate-900">฿0</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-slate-500">สะสมรายปี</span>
-              <span id="yearProfit" class="font-bold text-green-500">฿0</span>
-            </div>
-          </div>
-        </div>
+        <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around items-center p-4 text-white text-[10px] rounded-t-2xl shadow-2xl z-30">
+            <a href="dashboard.html" class="flex flex-col items-center font-bold text-white no-underline">
+                <span class="text-xl mb-1">📊</span>
+                <span>รายงาน</span>
+            </a>
+            <a href="index.html" class="flex flex-col items-center opacity-60 text-white no-underline">
+                <span class="text-xl mb-1">📝</span>
+                <span>รายการทอง</span>
+            </a>
+            <a href="goldprice.html" class="flex flex-col items-center opacity-60 text-white no-underline">
+                <span class="text-xl mb-1">💰</span>
+                <span>เช็คราคา</span>
+            </a>
+        </nav>
+    </div>
 
-        <div class="soft-card p-4">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-[14px] font-bold text-slate-800">ราคาทองล่าสุด</h2>
-            <span id="priceDate" class="text-[10px] text-slate-400">-</span>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-xl border border-green-200 bg-green-50 p-3">
-              <p class="text-[11px] text-green-700 font-bold">รับซื้อ</p>
-              <p id="buyBackPrice" class="text-[24px] font-bold text-green-700 mt-1">-</p>
-            </div>
-            <div class="rounded-xl border border-red-200 bg-red-50 p-3">
-              <p class="text-[11px] text-red-700 font-bold">ขายออก</p>
-              <p id="sellOutPrice" class="text-[24px] font-bold text-red-700 mt-1">-</p>
-            </div>
-          </div>
-        </div>
+    <script>
+        // ใช้ WEB_APP_URL ตัวเดิมที่คุณต้อม Deploy ไว้
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyXc05X4UE5Zz4yyCQDMctFJKoGSlU5JA5S5euGriBIEK3gOlQQJp0fO4liG4JBdeyLOg/exec";
+        let myChart = null;
 
-        <div class="soft-card p-4">
-          <h2 class="text-[14px] font-bold text-slate-800 mb-3">ประวัติการขายล่าสุด</h2>
-          <div id="salesList" class="space-y-2"></div>
-        </div>
-      </div>
-    </main>
+        async function loadDashboardData() {
+            try {
+                document.getElementById('loading').classList.remove('hidden');
+                document.getElementById('dashboard-content').classList.add('hidden');
 
-    <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto flex justify-around items-center p-3 text-white text-[10px] rounded-t-2xl shadow-2xl z-30">
-      <a href="dashboard.html" class="flex flex-col items-center font-bold text-white no-underline">
-        <span class="text-sm">📊</span>
-        <span>รายงาน</span>
-      </a>
-      <a href="index.html" class="flex flex-col items-center opacity-70 text-white no-underline">
-        <span class="text-sm">📦</span>
-        <span>รายการทอง</span>
-      </a>
-      <a href="index.html" class="flex flex-col items-center opacity-70 text-white no-underline">
-        <span class="text-sm">➕</span>
-        <span>บันทึกซื้อ</span>
-      </a>
-    </nav>
-  </div>
+                // 1. ดึงราคาคู่ Buy/Sell ปัจจุบัน
+                const pRes = await fetch(`${WEB_APP_URL}?page=live_price`);
+                const pData = await pRes.json();
+                const currentBuyBack = parseFloat(pData.buy);
+                
+                document.getElementById('live-buy').innerText = currentBuyBack.toLocaleString();
+                document.getElementById('live-sell').innerText = Number(pData.sell).toLocaleString();
 
-  <script>
-    // ====== ใส่ URL Web App ตัวเดียวกับ index.html ======
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyXc05X4UE5Zz4yyCQDMctFJKoGSlU5JA5S5euGriBIEK3gOlQQJp0fO4liG4JBdeyLOg/exec";
-
-    document.getElementById('refreshBtn').addEventListener('click', fetchDashboard);
-
-    function formatNumber(num, digits = 0) {
-      const n = Number(num || 0);
-      return n.toLocaleString('en-US', {
-        minimumFractionDigits: digits,
-        maximumFractionDigits: digits
-      });
-    }
-
-    function formatThaiShortDateTime(isoString) {
-      if (!isoString) return '-';
-      const d = new Date(isoString);
-      if (isNaN(d.getTime())) return '-';
-
-      const day = d.getDate();
-      const month = d.getMonth() + 1;
-      const year = d.getFullYear() + 543;
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mm = String(d.getMinutes()).padStart(2, '0');
-
-      return `${day}/${month}/${year} ${hh}:${mm}`;
-    }
-
-    function showLoading(show) {
-      document.getElementById('loading').classList.toggle('hidden', !show);
-      document.getElementById('dashboard').classList.toggle('hidden', show);
-    }
-
-    async function fetchDashboard() {
-      if (!WEB_APP_URL || WEB_APP_URL.includes('PASTE_YOUR')) {
-        alert('กรุณาใส่ WEB_APP_URL ใน dashboard.html ก่อน');
-        return;
-      }
-
-      try {
-        showLoading(true);
-
-        const res = await fetch(`${WEB_APP_URL}?action=dashboard`);
-        const data = await res.json();
-
-        if (data.status !== 'success') {
-          throw new Error(data.message || 'โหลด dashboard ไม่สำเร็จ');
+                // 2. ดึงข้อมูลพอร์ต inventory
+                const res = await fetch(`${WEB_APP_URL}?page=inventory`);
+                const inventory = await res.json();
+                
+                processAndDisplay(inventory, currentBuyBack);
+                
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('dashboard-content').classList.remove('hidden');
+            } catch (e) {
+                document.getElementById('loading').innerHTML = "❌ การเชื่อมต่อล้มเหลว กรุณาลองใหม่";
+            }
         }
 
-        renderSummary(data.summary || {});
-        renderPrices(data.prices || {});
-        renderSales(data.recent_sales || []);
+        function processAndDisplay(data, buyBackPrice) {
+            let totalCapital = 0;
+            let totalCurrentProfit = 0;
+            let holdingCount = 0;
+            let availableCount = 0;
 
-        showLoading(false);
-      } catch (err) {
-        document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('dashboard').classList.add('hidden');
-        document.getElementById('loading').innerHTML = `เกิดข้อผิดพลาด: ${err.message || err}`;
-      }
-    }
+            data.forEach(item => {
+                if (item.status === "HOLDING") {
+                    const cap = parseFloat(item.capital) || 0;
+                    const cost = parseFloat(item.buy_price) || 0;
+                    totalCapital += cap;
+                    if (cost > 0) {
+                        // กำไรคำนวณจากราคารับซื้อสมาคม
+                        totalCurrentProfit += (buyBackPrice - cost) * (cap / cost);
+                    }
+                    holdingCount++;
+                } else {
+                    availableCount++;
+                }
+            });
 
-    function renderSummary(summary) {
-      document.getElementById('totalProfit').textContent = `฿${formatNumber(summary.total_profit || 0, 0)}`;
-      document.getElementById('sellCount').textContent = `${formatNumber(summary.sell_count || 0, 0)} รอบ`;
-      document.getElementById('capitalRecovered').textContent = `฿${formatNumber(summary.total_capital_recovered || 0, 0)}`;
-      document.getElementById('monthProfit').textContent = `฿${formatNumber(summary.month_profit || 0, 0)}`;
-      document.getElementById('threeMonthProfit').textContent = `฿${formatNumber(summary.three_month_profit || 0, 0)}`;
-      document.getElementById('yearProfit').textContent = `฿${formatNumber(summary.year_profit || 0, 0)}`;
-    }
+            const totalValue = totalCapital + totalCurrentProfit;
+            const totalProfitPct = totalCapital > 0 ? (totalCurrentProfit / totalCapital) * 100 : 0;
 
-    function renderPrices(prices) {
-      document.getElementById('buyBackPrice').textContent = prices.buy_back ? formatNumber(prices.buy_back, 0) : '-';
-      document.getElementById('sellOutPrice').textContent = prices.sell_out ? formatNumber(prices.sell_out, 0) : '-';
-      document.getElementById('priceDate').textContent = prices.thai_date ? `วันที่ราคา: ${prices.thai_date}` : '-';
-    }
+            // อัปเดตตัวเลขบนหน้าจอ
+            document.getElementById('total-capital').innerText = `฿${Math.round(totalCapital).toLocaleString()}`;
+            document.getElementById('total-value').innerText = `฿${Math.round(totalValue).toLocaleString()}`;
+            document.getElementById('holding-lots').innerText = holdingCount;
+            document.getElementById('available-lots').innerText = availableCount;
 
-    function renderSales(sales) {
-      const list = document.getElementById('salesList');
-      list.innerHTML = '';
+            const profitElem = document.getElementById('total-profit');
+            profitElem.innerText = `${totalCurrentProfit >= 0 ? '+' : ''}฿${Math.round(totalCurrentProfit).toLocaleString()}`;
+            profitElem.className = `text-4xl font-black mt-2 ${totalCurrentProfit >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            
+            const pctElem = document.getElementById('total-profit-pct');
+            pctElem.innerText = `${totalCurrentProfit >= 0 ? '+' : ''}${totalProfitPct.toFixed(2)}%`;
+            pctElem.className = `inline-flex items-center px-3 py-1 rounded-full mt-2 text-sm font-bold ${totalCurrentProfit >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
 
-      if (!sales.length) {
-        const empty = document.createElement('div');
-        empty.className = 'text-center text-slate-400 text-sm italic py-6';
-        empty.textContent = 'ยังไม่มีประวัติการขาย';
-        list.appendChild(empty);
-        return;
-      }
+            updateChart(holdingCount, availableCount);
+        }
 
-      sales.forEach(item => {
-        const profit = Number(item.profit || 0);
-        const row = document.createElement('div');
-        row.className = 'rounded-xl border border-slate-100 p-3';
+        function updateChart(holding, available) {
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            if (myChart) myChart.destroy();
 
-        row.innerHTML = `
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <p class="text-[13px] font-bold text-slate-800">LOT ${escapeHtml(item.lot_id || '-')}</p>
-              <p class="text-[10px] text-slate-400 mt-1">${formatThaiShortDateTime(item.sold_at)}</p>
-            </div>
-            <div class="text-right">
-              <p class="text-[10px] text-slate-400">กำไร/ขาดทุน</p>
-              <p class="text-[14px] font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}">
-                ${profit >= 0 ? '+' : ''}฿${formatNumber(profit, 0)}
-              </p>
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-2 mt-3 text-[11px]">
-            <div class="rounded-lg bg-slate-50 p-2">
-              <p class="text-slate-400">ทุน</p>
-              <p class="font-bold text-slate-700">฿${formatNumber(item.capital || 0, 0)}</p>
-            </div>
-            <div class="rounded-lg bg-slate-50 p-2">
-              <p class="text-slate-400">ซื้อที่</p>
-              <p class="font-bold text-slate-700">${formatNumber(item.buy_price || 0, 0)}</p>
-            </div>
-            <div class="rounded-lg bg-slate-50 p-2">
-              <p class="text-slate-400">ขายได้</p>
-              <p class="font-bold text-slate-700">฿${formatNumber(item.total_received || 0, 0)}</p>
-            </div>
-          </div>
-        `;
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ถือครอง', 'ว่าง'],
+                    datasets: [{
+                        data: [holding, available],
+                        backgroundColor: ['#fbbf24', '#e5e7eb'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+                    },
+                    cutout: '75%'
+                }
+            });
+        }
 
-        list.appendChild(row);
-      });
-    }
-
-    function escapeHtml(str) {
-      return String(str ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    window.onload = fetchDashboard;
-  </script>
+        // เริ่มทำงานเมื่อโหลดหน้าจอ
+        window.onload = loadDashboardData;
+    </script>
 </body>
 </html>
- 
