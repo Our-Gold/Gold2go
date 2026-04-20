@@ -1,151 +1,354 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gold Van Life - Thom Master</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f8f9fa; }
-        .nav-bar { background-color: #bd731d; }
-        .gold-card { border-radius: 12px; border-left: 4px solid #e2e8f0; transition: 0.2s; margin-bottom: 8px; border: 1px solid #eee; position: relative; }
-        .holding { border-left-color: #fbbf24; background-color: #fff; }
-        .muted { border-left-color: #94a3b8; opacity: 0.8; }
-        .btn-mute { position: absolute; top: -5px; right: -5px; background: #64748b; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid white; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Gold Van Life - รายการทอง</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Kanit', sans-serif; background: #f4f5f7; }
+    .app-shell { max-width: 500px; margin: 0 auto; background: #fff; min-height: 100vh; position: relative; box-shadow: 0 0 0 1px rgba(0,0,0,0.03); }
+    .nav-bar { background: #bd731d; }
+    .gold-card {
+      border-radius: 16px;
+      border: 1px solid #ececec;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      position: relative;
+    }
+    .holding { border-left: 5px solid #f5b301; }
+    .muted { opacity: 0.82; border-left-color: #94a3b8; }
+    .price-box-green {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+    }
+    .price-box-red {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+    .btn-ok {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: #64748b;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      border: 2px solid #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+  </style>
 </head>
-<body class="pb-20">
-    <div class="max-w-md mx-auto bg-white min-h-screen relative shadow-sm">
-        <header class="p-3 pt-8 border-b sticky top-0 bg-white z-20 shadow-sm">
-            <div class="flex justify-between items-center mb-2">
-                <h1 class="text-lg font-bold text-gray-800 italic">ล็อตทองคุณต้อม 🚐</h1>
-                <button onclick="fetchInventory()" class="text-blue-500 text-[10px] font-bold uppercase tracking-wider">Refresh 🔄</button>
+<body>
+  <div class="app-shell pb-24">
+    <header class="sticky top-0 z-20 bg-white border-b px-4 pt-7 pb-4">
+      <div class="flex items-center justify-between mb-3">
+        <h1 class="text-[20px] font-bold text-slate-800 italic">ล็อตทองคุณต้อม 🚐</h1>
+        <button id="refreshBtn" class="text-blue-600 text-[11px] font-bold uppercase tracking-wide">Refresh 🔄</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <div class="price-box-green rounded-xl p-3">
+          <p class="text-[10px] text-green-700 font-bold uppercase leading-tight">ราคารับซื้อ<br>ทองคำแท่ง</p>
+          <p id="buyBackPrice" class="text-[24px] font-bold text-green-700 leading-none mt-2">-</p>
+        </div>
+        <div class="price-box-red rounded-xl p-3">
+          <p class="text-[10px] text-red-700 font-bold uppercase leading-tight">ราคาขายออก<br>ทองคำแท่ง</p>
+          <p id="sellOutPrice" class="text-[24px] font-bold text-red-700 leading-none mt-2">-</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between text-[10px] text-slate-400">
+        <span id="priceDate">วันที่ราคา: -</span>
+        <span id="priceFetchedAt">อัปเดต: -</span>
+      </div>
+    </header>
+
+    <main class="p-3">
+      <div id="loading" class="text-center text-slate-400 text-xs italic py-10">กำลังเชื่อมต่อฐานข้อมูล...</div>
+      <div id="inventoryGrid" class="hidden space-y-2"></div>
+    </main>
+
+    <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto flex justify-around items-center p-3 text-white text-[10px] rounded-t-2xl shadow-2xl z-30">
+      <a href="dashboard.html" class="flex flex-col items-center opacity-70 text-white no-underline">
+        <span class="text-sm">📊</span>
+        <span>รายงาน</span>
+      </a>
+      <a href="index.html" class="flex flex-col items-center font-bold text-white no-underline">
+        <span class="text-sm">📦</span>
+        <span>รายการทอง</span>
+      </a>
+      <button id="openNewLotBtn" class="flex flex-col items-center text-white">
+        <span class="text-sm">➕</span>
+        <span>บันทึกซื้อ</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    // ====== ใส่ URL Web App ตัวใหม่ของคุณ ======
+    const WEB_APP_URL = "PASTE_YOUR_GAS_WEB_APP_URL_HERE";
+
+    let appData = {
+      prices: null,
+      items: []
+    };
+
+    document.getElementById('refreshBtn').addEventListener('click', fetchInventory);
+    document.getElementById('openNewLotBtn').addEventListener('click', openNewLotFlow);
+
+    function formatNumber(num, digits = 0) {
+      const n = Number(num || 0);
+      return n.toLocaleString('en-US', {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      });
+    }
+
+    function formatThaiShortDate(isoString) {
+      if (!isoString) return '-';
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return '-';
+      const day = d.getDate();
+      const month = d.getMonth() + 1;
+      const year = d.getFullYear() + 543;
+      return `${day}/${month}/${year}`;
+    }
+
+    function formatDateTimeSmall(isoString) {
+      if (!isoString) return '-';
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return '-';
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${formatThaiShortDate(isoString)} ${hh}:${mm}`;
+    }
+
+    function showLoading(show) {
+      document.getElementById('loading').classList.toggle('hidden', !show);
+      document.getElementById('inventoryGrid').classList.toggle('hidden', show);
+    }
+
+    async function fetchInventory() {
+      if (!WEB_APP_URL || WEB_APP_URL.includes('PASTE_YOUR')) {
+        alert('กรุณาใส่ WEB_APP_URL ใน index.html ก่อน');
+        return;
+      }
+
+      try {
+        showLoading(true);
+
+        const res = await fetch(`${WEB_APP_URL}?action=inventory`);
+        const data = await res.json();
+
+        if (data.status !== 'success') {
+          throw new Error(data.message || 'โหลดข้อมูลไม่สำเร็จ');
+        }
+
+        appData = data;
+        renderHeader(data.prices);
+        renderInventory(data.items || []);
+
+        showLoading(false);
+      } catch (err) {
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('inventoryGrid').classList.add('hidden');
+        document.getElementById('loading').innerHTML = `เกิดข้อผิดพลาด: ${err.message || err}`;
+      }
+    }
+
+    function renderHeader(prices) {
+      const buyBack = Number(prices?.buy_back || 0);
+      const sellOut = Number(prices?.sell_out || 0);
+
+      document.getElementById('buyBackPrice').textContent = buyBack > 0 ? formatNumber(buyBack, 0) : '-';
+      document.getElementById('sellOutPrice').textContent = sellOut > 0 ? formatNumber(sellOut, 0) : '-';
+      document.getElementById('priceDate').textContent = `วันที่ราคา: ${prices?.thai_date || '-'}`;
+      document.getElementById('priceFetchedAt').textContent = `อัปเดต: ${formatDateTimeSmall(prices?.fetched_at)}`;
+    }
+
+    function renderInventory(items) {
+      const grid = document.getElementById('inventoryGrid');
+      grid.innerHTML = '';
+
+      const holdingItems = items
+        .filter(item => String(item.status || '').toUpperCase() === 'HOLDING')
+        .sort((a, b) => Number(b.lot_id || 0) - Number(a.lot_id || 0));
+
+      renderNewLotCard(grid, items);
+
+      if (holdingItems.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'text-center text-slate-400 text-sm italic py-10';
+        empty.textContent = 'ยังไม่มีล็อตที่ถืออยู่';
+        grid.appendChild(empty);
+        return;
+      }
+
+      holdingItems.forEach(item => {
+        const diffPct = Number(item.profit_pct || 0);
+        const profitAmount = Number(item.profit_amount || 0);
+        const currentValue = Number(item.current_value || 0);
+        const capital = Number(item.capital || 0);
+        const buyPrice = Number(item.buy_price || 0);
+        const isMuted = !!item.is_muted;
+        const shouldShowMuteBtn = diffPct >= 5 || diffPct <= -3;
+
+        const card = document.createElement('div');
+        card.className = `gold-card holding p-3 ${isMuted ? 'muted' : ''}`;
+
+        card.innerHTML = `
+          ${shouldShowMuteBtn ? `<button class="btn-ok" onclick="muteLot('${escapeJs(item.lot_id)}')" title="รับทราบ">OK</button>` : ''}
+          <div class="flex items-start justify-between gap-3">
+            <div class="w-[26%]">
+              <p class="text-[10px] text-slate-400 leading-none mb-1">${formatThaiShortDate(item.updated_at)}</p>
+              <p class="text-[14px] font-bold text-slate-800 leading-none">LOT ${escapeHtml(item.lot_id)}</p>
+              <p class="text-[10px] mt-2 font-medium ${isMuted ? 'text-slate-400' : 'text-amber-600'}">${isMuted ? 'MUTED' : 'HOLDING'}</p>
             </div>
-            <div class="bg-yellow-50 p-2 rounded-lg border border-yellow-200 flex items-center gap-3">
-                <label class="text-[9px] text-yellow-700 font-bold uppercase leading-tight">ราคาตลาด<br>จำลอง:</label>
-                <input type="number" id="mock-price" value="43500" oninput="updateMockPrice(this.value)" class="flex-1 bg-white border border-yellow-300 rounded px-2 py-1 text-base font-bold text-yellow-800 focus:outline-none">
+
+            <div class="w-[34%] text-center border-l border-slate-100 pl-3">
+              <p class="text-[10px] text-slate-400 uppercase">เงินลงทุน</p>
+              <p class="text-[15px] font-bold text-blue-900 mt-1">฿${formatNumber(capital, 0)}</p>
+              <p class="text-[10px] text-slate-400 mt-1">@ ${formatNumber(buyPrice, 0)}</p>
             </div>
-        </header>
 
-        <div id="loading" class="p-10 text-center text-gray-400 text-xs italic font-light">กำลังเชื่อมต่อฐานข้อมูล...</div>
-        <div id="inventory-grid" class="p-2 hidden"></div>
+            <div class="w-[32%] text-right">
+              <p class="text-[10px] text-slate-400 uppercase">มูลค่าปัจจุบัน</p>
+              <p class="text-[15px] font-bold mt-1 ${diffPct >= 0 ? 'text-green-600' : 'text-red-600'}">฿${formatNumber(currentValue, 0)}</p>
+              <p class="text-[10px] font-bold mt-1 ${diffPct >= 0 ? 'text-green-500' : 'text-red-500'}">
+                ${profitAmount >= 0 ? '+' : ''}${formatNumber(profitAmount, 0)} (${diffPct.toFixed(2)}%)
+              </p>
+            </div>
 
-        <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around items-center p-2 text-white text-[9px] rounded-t-xl shadow-2xl z-30">
-            <a href="dashboard.html" class="flex flex-col items-center opacity-60 text-white no-underline"><span>📊</span>รายงาน</a>
-            <a href="index.html" class="flex flex-col items-center font-bold text-white no-underline"><span>📝</span>รายการทอง</a>
-            <div class="flex flex-col items-center opacity-60 pointer-events-none"><span>➕</span>บันทึกซื้อ</div>
-        </nav>
-    </div>
+            <div class="flex items-center">
+              <button onclick="sellLot('${escapeJs(item.lot_id)}', ${Number(item.estimated_sell_value || 0)})"
+                class="bg-red-500 text-white px-3 py-2 rounded-xl text-[11px] font-bold shadow active:scale-95 transition">
+                ขาย
+              </button>
+            </div>
+          </div>
+        `;
 
-    <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwtUJ8Fgz0mg93M-QaFnb6R2OyGprLeCYiiXZRsd2eydlz2qOsrzQD9Von6Ax0B4Mylnw/exec"; 
-        let currentData = [];
-        let timer;
+        grid.appendChild(card);
+      });
+    }
 
-        function updateMockPrice(val) {
-            clearTimeout(timer);
-            timer = setTimeout(() => {
-                fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ currentMockPrice: val }) });
-                renderInventory(currentData);
-            }, 1000);
+    function renderNewLotCard(container, allItems) {
+      let maxLotId = 0;
+      (allItems || []).forEach(item => {
+        const n = parseInt(item.lot_id, 10);
+        if (!isNaN(n) && n > maxLotId) maxLotId = n;
+      });
+
+      const nextId = maxLotId + 1;
+
+      const card = document.createElement('div');
+      card.className = 'gold-card border-dashed border-2 border-blue-200 bg-blue-50 p-4 mb-3';
+      card.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-[14px] font-bold text-blue-900">เปิด LOT ${nextId}</p>
+            <p class="text-[10px] text-blue-500 italic mt-1">พร้อมเข้าซื้อที่ราคาขายออกปัจจุบัน</p>
+          </div>
+          <button onclick="buyLot('${nextId}')"
+            class="bg-blue-600 text-white px-5 py-2 rounded-xl text-[11px] font-bold shadow active:scale-95 transition">
+            ซื้อเพิ่ม
+          </button>
+        </div>
+      `;
+      container.appendChild(card);
+    }
+
+    function openNewLotFlow() {
+      let maxLotId = 0;
+      (appData.items || []).forEach(item => {
+        const n = parseInt(item.lot_id, 10);
+        if (!isNaN(n) && n > maxLotId) maxLotId = n;
+      });
+      const nextId = String(maxLotId + 1);
+      buyLot(nextId);
+    }
+
+    async function buyLot(lotId) {
+      const sellOutPrice = Number(appData?.prices?.sell_out || 0);
+      const capital = prompt(`LOT ${lotId}: ลงทุนกี่บาท?`, '10000');
+      if (capital === null) return;
+
+      const buyPrice = prompt(`LOT ${lotId}: ราคาซื้อจริงต่อบาททองคำ?`, sellOutPrice > 0 ? String(Math.round(sellOutPrice)) : '');
+      if (buyPrice === null) return;
+
+      await postAction({
+        action: 'BUY',
+        lotId,
+        capital,
+        buyPrice
+      });
+    }
+
+    async function sellLot(lotId, estimatedSellValue) {
+      const defaultValue = estimatedSellValue > 0 ? Math.round(estimatedSellValue) : '';
+      const totalReceived = prompt(`LOT ${lotId}: ขายจริงได้เท่าไหร่?`, String(defaultValue));
+      if (totalReceived === null) return;
+
+      await postAction({
+        action: 'SELL',
+        lotId,
+        totalReceived
+      });
+    }
+
+    async function muteLot(lotId) {
+      const ok = confirm(`รับทราบแล้ว และต้องการหยุดเตือนสำหรับ LOT ${lotId} ใช่หรือไม่?`);
+      if (!ok) return;
+
+      await postAction({
+        action: 'MUTE',
+        lotId
+      });
+    }
+
+    async function postAction(payload) {
+      try {
+        showLoading(true);
+
+        const res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.status !== 'success') {
+          throw new Error(data.message || 'บันทึกไม่สำเร็จ');
         }
 
-        async function fetchInventory() {
-            try {
-                document.getElementById('loading').classList.remove('hidden');
-                const res = await fetch(`${WEB_APP_URL}?page=inventory`);
-                currentData = await res.json();
-                renderInventory(currentData);
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('inventory-grid').classList.remove('hidden');
-            } catch (e) { document.getElementById('loading').innerHTML = "Error!"; }
-        }
+        await fetchInventory();
+      } catch (err) {
+        showLoading(false);
+        alert(`เกิดข้อผิดพลาด: ${err.message || err}`);
+      }
+    }
 
-        function formatDateShort(dateString) {
-            if (!dateString || dateString === 0 || dateString === "0") return "-";
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return "-";
-            return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear() + 543}`;
-        }
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
-        function renderInventory(data) {
-            const grid = document.getElementById('inventory-grid');
-            const mockPrice = parseFloat(document.getElementById('mock-price').value) || 0;
-            grid.innerHTML = "";
-            let maxLotId = 0;
-            if (data.length > 0) {
-                maxLotId = Math.max(...data.map(item => parseInt(item.lot_id) || 0));
-            }
-            renderNewLotButton(grid, maxLotId + 1);
-            
-            data.filter(item => item.status === "HOLDING").sort((a, b) => b.lot_id - a.lot_id).forEach(item => {
-                const buyP = parseFloat(item.buy_price) || 0;
-                const cap = parseFloat(item.capital) || 0;
-                const diff = ((mockPrice - buyP) / buyP) * 100;
-                const profit = (mockPrice - buyP) * (cap / buyP);
-                const isMuted = item.is_muted;
-                const dateShort = formatDateShort(item.updated_at); 
+    function escapeJs(str) {
+      return String(str ?? '').replace(/'/g, "\\'");
+    }
 
-                const card = document.createElement('div');
-                card.className = `gold-card p-2 px-3 shadow-sm holding ${isMuted ? 'muted' : ''}`;
-                card.innerHTML = `
-                    ${(diff >= 5 || diff <= -3) ? `<button onclick="muteAlert(${item.lot_id})" class="btn-mute" title="รับทราบ">OK</button>` : ''}
-                    <div class="flex justify-between items-center">
-                        <div class="w-1/4">
-                            <p class="text-[8px] text-gray-400 uppercase leading-none mb-1">${dateShort}</p>
-                            <p class="text-[11px] font-bold text-gray-800 leading-none">LOT ${item.lot_id}</p>
-                            <p class="text-[8px] ${isMuted ? 'text-gray-400' : 'text-yellow-600'} font-medium italic mt-1 leading-none">${isMuted ? 'MUTED' : 'HOLDING'}</p>
-                        </div>
-                        <div class="w-1/3 text-center border-l border-gray-100">
-                            <p class="text-[8px] text-gray-400 uppercase leading-none">เงินลงทุน</p>
-                            <p class="text-[13px] font-bold text-blue-900 leading-none mt-1">฿${Number(cap).toLocaleString()}</p>
-                            <p class="text-[8px] text-gray-400 mt-1 leading-none">@ ${Number(buyP).toLocaleString()}</p>
-                        </div>
-                        <div class="w-1/3 text-right">
-                            <p class="text-[8px] text-gray-400 uppercase leading-none">มูลค่าวันนี้</p>
-                            <p class="text-[13px] font-bold ${diff >= 0 ? 'text-green-600' : 'text-red-600'} leading-none mt-1">฿${Math.round(cap + profit).toLocaleString()}</p>
-                            <p class="text-[8px] font-bold mt-1 leading-none ${diff >= 0 ? 'text-green-500' : 'text-red-500'}">${diff >= 0 ? '+' : ''}${Math.round(profit).toLocaleString()} (${diff.toFixed(1)}%)</p>
-                        </div>
-                        <div class="ml-2"><button onclick="handleAction(${item.lot_id}, 'SELL', ${cap}, ${(cap+profit).toFixed(0)})" class="bg-red-500 text-white w-12 py-2 rounded-lg text-[10px] font-bold shadow-sm active:scale-95 transition">ขาย</button></div>
-                    </div>`;
-                grid.appendChild(card);
-            });
-        }
-
-        async function muteAlert(lotId) {
-            if(confirm(`รับทราบราคานี้ และให้บอทหยุดเตือนสำหรับ LOT ${lotId} ใช่หรือไม่?`)) {
-                await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "MUTE", lotId: lotId }) });
-                fetchInventory();
-            }
-        }
-
-        function renderNewLotButton(grid, nextId) {
-            const btn = document.createElement('div');
-            btn.className = `gold-card p-3 px-4 shadow-sm border-dashed border-2 border-blue-200 bg-blue-50 mb-4`;
-            btn.innerHTML = `<div class="flex justify-between items-center"><div><p class="text-[11px] font-bold text-blue-800 tracking-tight">เปิด LOT ${nextId}</p><p class="text-[8px] text-blue-400 italic">พร้อมรอจังหวะเข้าครับ 🚐</p></div><button onclick="handleAction(${nextId}, 'BUY')" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-[10px] font-bold shadow-md uppercase active:scale-90 transition">ซื้อเพิ่ม</button></div>`;
-            grid.appendChild(btn);
-        }
-
-        async function handleAction(lotId, type, capital, estTotal) {
-            const mPrice = document.getElementById('mock-price').value;
-            if (type === 'BUY') {
-                const cap = prompt(`LOT ${lotId}: ลงทุนกี่บาท?`, "10000");
-                const price = prompt(`LOT ${lotId}: ราคาทอง?`, mPrice);
-                if (cap && price) await send({ action: "BUY", lotId, capital: cap, buyPrice: price, currentMockPrice: mPrice });
-            } else {
-                const rec = prompt(`LOT ${lotId}: ขายได้เท่าไหร่?`, estTotal);
-                if (rec) await send({ action: "SELL", lotId, totalReceived: rec, currentMockPrice: mPrice });
-            }
-        }
-
-        async function send(payload) {
-            document.getElementById('loading').classList.remove('hidden');
-            const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) });
-            if ((await res.json()).status === "success") fetchInventory();
-        }
-
-        window.onload = fetchInventory;
-    </script>
+    window.onload = fetchInventory;
+  </script>
 </body>
 </html>
