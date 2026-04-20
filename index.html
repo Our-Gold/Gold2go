@@ -66,7 +66,6 @@
             if (!dateString || dateString === 0 || dateString === "0") return "-";
             const date = new Date(dateString);
             if (isNaN(date.getTime())) return "-";
-            // แสดงผลเป็น วัน/เดือน/ปีพ.ศ.
             return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear() + 543}`;
         }
 
@@ -86,8 +85,6 @@
                 const diff = ((mockPrice - buyP) / buyP) * 100;
                 const profit = (mockPrice - buyP) * (cap / buyP);
                 const isMuted = item.is_muted;
-                
-                // แก้ไขจุดสำคัญ: ดึงค่าจากคีย์ "updated_at" ตามที่ปรากฏในรูป Sheets
                 const dateShort = formatDateShort(item.updated_at); 
 
                 const card = document.createElement('div');
