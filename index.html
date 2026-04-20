@@ -215,7 +215,7 @@
     .field label.blue{color:#2e67cf}
     .field label.orange{color:#d36d00}
 
-    .input, .select, .textarea{
+    .input, .textarea{
       width:100%;
       border:1px solid #dfe5ee;
       background:#f8fafc;
@@ -460,11 +460,31 @@
       font-weight:800;
       padding:6px 0 12px;
     }
+
+    .status-box{
+      background:#fff7dd;
+      border:1px solid #f0d98d;
+      color:#8a6512;
+      border-radius:18px;
+      padding:12px 14px;
+      font-size:13px;
+      font-weight:800;
+      line-height:1.6;
+      margin-bottom:12px;
+      display:none;
+    }
+
+    .status-box.error{
+      background:#fdecef;
+      border-color:#f6bfd0;
+      color:#b22f57;
+    }
   </style>
 </head>
 <body>
   <div class="app">
-    <!-- รายงาน -->
+    <div id="statusBox" class="status-box"></div>
+
     <section id="screen-report" class="screen active">
       <div class="card hero-card">
         <div class="title" style="text-align:center;">ราคาทองวันนี้</div>
@@ -535,18 +555,14 @@
       </div>
     </section>
 
-    <!-- รายการทอง -->
     <section id="screen-lots" class="screen">
       <div class="topbar">
-        <div>
-          <h1>📋 รายการล็อตคงเหลือ</h1>
-        </div>
+        <div><h1>📋 รายการล็อตคงเหลือ</h1></div>
         <button class="refresh-btn" onclick="loadAll()">🔄 รีเฟรช</button>
       </div>
       <div id="lotsWrap"></div>
     </section>
 
-    <!-- กลยุทธ์ -->
     <section id="screen-strategy" class="screen">
       <div class="section-head">💡 กลยุทธ์และการพักเงิน</div>
 
@@ -563,10 +579,9 @@
         </div>
       </div>
 
-      <div class="muted-note">ข้อมูลจะเซฟลงในเครื่องมือของพี่อัตโนมัติ</div>
+      <div class="muted-note">ข้อมูลจะบันทึกลง Google Sheet ผ่าน GAS</div>
     </section>
 
-    <!-- บันทึกซื้อ -->
     <section id="screen-buy" class="screen">
       <div class="card">
         <div class="section-head">➕ บันทึกซื้อทองใหม่</div>
@@ -620,6 +635,8 @@
   </nav>
 
   <script>
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyXc05X4UE5Zz4yyCQDMctFJKoGSlU5JA5S5euGriBIEK3gOlQQJp0fO4liG4JBdeyLOg/exec';
+
     let APP = {
       data: null,
       pollTimer: null
@@ -649,23 +666,96 @@
       return `${y}-${m}-${day}`;
     }
 
-    function loadAll() {
-      google.script.run
-        .withSuccessHandler(renderAll)
-        .withFailureHandler(err => {
-          alert('โหลดข้อมูลไม่สำเร็จ');
-          console.error(err);
-        })
-        .getAppData();
+    function showStatus(message, isError = false) {
+      const box = document.getElementById('statusBox');
+      if (!message) {
+        box.style.display = 'none';
+        box.classList.remove('error');
+        box.textContent = '';
+        return;
+      }
+      box.style.display = 'block';
+      box.textContent = message;
+      box.classList.toggle('error', !!isError);
+    }
+
+    function buildUrl(params) {
+      const usp = new URLSearchParams(params);
+      return `${GAS_WEB_APP_URL}?${usp.toString()}`;
+    }
+
+    function jsonpRequest(params) {
+      return new Promise((resolve, reject) => {
+        if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.indexOf('PUT_YOUR_GAS_WEB_APP_URL_HERE') > -1) {
+          reject(new Error('ยังไม่ได้ใส่ GAS Web App URL ใน index.html'));
+          return;
+        }
+
+        const cbName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+        params.callback = cbName;
+
+        const script = document.createElement('script');
+        script.src = buildUrl(params);
+        script.async = true;
+
+        let done = false;
+        const cleanup = () => {
+          if (script.parentNode) script.parentNode.removeChild(script);
+          try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+        };
+
+        const timer = setTimeout(() => {
+          if (done) return;
+          done = true;
+          cleanup();
+          reject(new Error('เชื่อมต่อ GAS ช้าเกินเวลา'));
+        }, 20000);
+
+        window[cbName] = function(data) {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          cleanup();
+          resolve(data);
+        };
+
+        script.onerror = function() {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          cleanup();
+          reject(new Error('โหลดข้อมูลจาก GAS ไม่สำเร็จ'));
+        };
+
+        document.body.appendChild(script);
+      });
+    }
+
+    async function loadAll() {
+      try {
+        showStatus('กำลังโหลดข้อมูล...');
+        const res = await jsonpRequest({ action: 'getAppData' });
+        if (!res || !res.success) {
+          throw new Error((res && res.message) || 'โหลดข้อมูลไม่สำเร็จ');
+        }
+        renderAll(res);
+
+        if (res.warnings && res.warnings.length) {
+          showStatus(res.warnings.join(' | '), false);
+        } else {
+          showStatus('');
+        }
+      } catch (err) {
+        console.error(err);
+        showStatus(err.message || 'เกิดข้อผิดพลาด', true);
+      }
     }
 
     function renderAll(res) {
-      if (!res || !res.success) return;
       APP.data = res;
 
-      // Summary
-      document.getElementById('livePriceMain').textContent = fmt(res.summary.currentPrice);
-      document.getElementById('liveUpdatedText').textContent = res.prices.primaryUpdated || 'อัปเดตล่าสุดจาก InterGOLD';
+      document.getElementById('livePriceMain').textContent = res.summary.currentPrice > 0 ? fmt(res.summary.currentPrice) : '--';
+      document.getElementById('liveUpdatedText').textContent = res.prices.primaryUpdated || 'ยังไม่มีข้อมูลราคา';
       document.getElementById('sumWeight').textContent = fmt(res.summary.totalWeight);
       document.getElementById('sumCost').textContent = fmt(res.summary.totalCost);
       document.getElementById('sumValue').textContent = fmt(res.summary.currentValue);
@@ -673,9 +763,9 @@
       document.getElementById('sumPnl').textContent = fmt(res.summary.pnl);
       document.getElementById('sumRealized').textContent = fmt(res.summary.realizedPnl);
 
-      document.getElementById('refBuy').textContent = fmt(res.prices.refBuy);
-      document.getElementById('refSell').textContent = fmt(res.prices.refSell);
-      document.getElementById('refUpdated').textContent = res.prices.refUpdated || '';
+      document.getElementById('refBuy').textContent = res.prices.refBuy > 0 ? fmt(res.prices.refBuy) : '--';
+      document.getElementById('refSell').textContent = res.prices.refSell > 0 ? fmt(res.prices.refSell) : '--';
+      document.getElementById('refUpdated').textContent = res.prices.refUpdated || 'ยังไม่มีข้อมูลราคา';
 
       paintValue('sumPercent', res.summary.percent);
       paintValue('sumPnl', res.summary.pnl);
@@ -720,7 +810,8 @@
 
       lots.forEach((lot, idx) => {
         const currentValue = Number(currentBuyPrice) * Number(lot.remainingWeight);
-        const costRemain = Number(lot.buyPrice) * Number(lot.remainingWeight);
+        const feeRemain = lot.originalWeight > 0 ? Number(lot.feeTotal || 0) * (Number(lot.remainingWeight) / Number(lot.originalWeight)) : 0;
+        const costRemain = (Number(lot.buyPrice) * Number(lot.remainingWeight)) + feeRemain;
         const pnl = currentValue - costRemain;
         const pct = costRemain > 0 ? (pnl / costRemain) * 100 : 0;
         const badgeClass = pct >= 0 ? 'up' : 'down';
@@ -781,7 +872,7 @@
       const trend = diff >= 0 ? 'มีกำไรตามราคาปัจจุบัน' : 'ยังต่ำกว่าต้นทุนเฉลี่ย';
 
       const text =
-`ภาพรวมตอนนี้ ระบบประเมินจากราคารับซื้อ InterGOLD ที่ ${fmt(cur)} บาท
+`ภาพรวมตอนนี้ ระบบประเมินจากราคารับซื้อ InterGOLD ที่ ${cur > 0 ? fmt(cur) : '--'} บาท
 
 ต้นทุนเฉลี่ยคงเหลือ: ${fmt(avg)} บาท
 สถานะ: ${trend}
@@ -789,10 +880,10 @@
 สัดส่วน: ${fmtPct(s.percent)}
 
 แนวคิดใช้งาน:
-1) ถ้าจะซื้อเพิ่ม ให้ดูราคาขายออกของ InterGOLD
-2) ถ้าจะประเมินขาย ให้ดูราคารับซื้อ
-3) ถ้าถึง +3% หรือ +5% ให้ใช้เป็นสัญญาณเตือน ไม่ใช่คำสั่งบังคับ
-4) เวลาขายจริง ให้บันทึกราคาที่กดได้จริงใน Gold2Go`;
+1) ตอนซื้อใหม่ ให้ดูราคาขายออก
+2) ตอนประเมินขาย ให้ดูราคารับซื้อ
+3) สัญญาณ +3%, +5%, -3%, -5% เป็นตัวเตือน
+4) ขายจริงเมื่อไร ให้บันทึกราคาที่ขายได้จริง`;
 
       document.getElementById('strategyAutoText').textContent = text;
       document.getElementById('noteInput').value = res.note || '';
@@ -804,36 +895,33 @@
       }
     }
 
-    function addBuy() {
-      const payload = {
-        buyDate: document.getElementById('buyDate').value,
-        buyPrice: document.getElementById('buyPrice').value,
-        weightBaht: document.getElementById('buyWeight').value,
-        feeTotal: document.getElementById('buyFee').value,
-        note: document.getElementById('buyNote').value
-      };
+    async function addBuy() {
+      try {
+        document.getElementById('buyStatus').textContent = 'กำลังบันทึก...';
 
-      document.getElementById('buyStatus').textContent = 'กำลังบันทึก...';
+        const res = await jsonpRequest({
+          action: 'addBuyLot',
+          buyDate: document.getElementById('buyDate').value,
+          buyPrice: document.getElementById('buyPrice').value,
+          weightBaht: document.getElementById('buyWeight').value,
+          feeTotal: document.getElementById('buyFee').value,
+          note: document.getElementById('buyNote').value
+        });
 
-      google.script.run
-        .withSuccessHandler(res => {
-          document.getElementById('buyStatus').textContent = res.message || '';
-          if (res.success) {
-            document.getElementById('buyPrice').value = '';
-            document.getElementById('buyWeight').value = '';
-            document.getElementById('buyFee').value = '0';
-            document.getElementById('buyNote').value = '';
-            loadAll();
-          }
-        })
-        .withFailureHandler(err => {
-          document.getElementById('buyStatus').textContent = 'บันทึกไม่สำเร็จ';
-          console.error(err);
-        })
-        .addBuyLot(payload);
+        document.getElementById('buyStatus').textContent = res.message || '';
+        if (res.success) {
+          document.getElementById('buyPrice').value = '';
+          document.getElementById('buyWeight').value = '';
+          document.getElementById('buyFee').value = '0';
+          document.getElementById('buyNote').value = '';
+          loadAll();
+        }
+      } catch (err) {
+        document.getElementById('buyStatus').textContent = err.message || 'บันทึกไม่สำเร็จ';
+      }
     }
 
-    function openSellDialog(lotId, remainingWeight, buyPrice) {
+    async function openSellDialog(lotId, remainingWeight, buyPrice) {
       const sellDate = prompt(`วันที่ขาย (YYYY-MM-DD)`, todayISO());
       if (!sellDate) return;
 
@@ -846,36 +934,35 @@
 
       const note = prompt(`หมายเหตุ`, `ขายบางส่วนจาก ${lotId}`) || '';
 
-      google.script.run
-        .withSuccessHandler(res => {
-          alert(res.message || 'เสร็จแล้ว');
-          if (res.success) loadAll();
-        })
-        .withFailureHandler(err => {
-          alert('บันทึกขายไม่สำเร็จ');
-          console.error(err);
-        })
-        .sellLot({
+      try {
+        const res = await jsonpRequest({
+          action: 'sellLot',
           lotId,
           sellDate,
           sellWeightBaht: sellWeight,
           sellPrice,
           note
         });
+
+        alert(res.message || 'เสร็จแล้ว');
+        if (res.success) loadAll();
+      } catch (err) {
+        alert(err.message || 'บันทึกขายไม่สำเร็จ');
+      }
     }
 
-    function saveNote() {
-      const note = document.getElementById('noteInput').value;
-      google.script.run
-        .withSuccessHandler(res => {
-          alert(res.message || 'บันทึกแล้ว');
-          if (res.success) loadAll();
-        })
-        .withFailureHandler(err => {
-          alert('บันทึกไม่สำเร็จ');
-          console.error(err);
-        })
-        .saveStrategyNote({ note });
+    async function saveNote() {
+      try {
+        const res = await jsonpRequest({
+          action: 'saveStrategyNote',
+          note: document.getElementById('noteInput').value
+        });
+
+        alert(res.message || 'บันทึกแล้ว');
+        if (res.success) loadAll();
+      } catch (err) {
+        alert(err.message || 'บันทึกไม่สำเร็จ');
+      }
     }
 
     function escapeHtml(text) {
@@ -889,10 +976,11 @@
 
     function startAutoRefresh() {
       if (APP.pollTimer) clearInterval(APP.pollTimer);
-      APP.pollTimer = setInterval(loadAll, 10000);
+      APP.pollTimer = setInterval(loadAll, 15000);
     }
 
     window.addEventListener('load', () => {
+      initFormDefaults();
       loadAll();
       startAutoRefresh();
     });
