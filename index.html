@@ -2,353 +2,825 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Gold Van Life - รายการทอง</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InterGOLD Gold Tracker</title>
   <style>
-    body { font-family: 'Kanit', sans-serif; background: #f4f5f7; }
-    .app-shell { max-width: 500px; margin: 0 auto; background: #fff; min-height: 100vh; position: relative; box-shadow: 0 0 0 1px rgba(0,0,0,0.03); }
-    .nav-bar { background: #bd731d; }
-    .gold-card {
-      border-radius: 16px;
-      border: 1px solid #ececec;
-      background: #fff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      position: relative;
+    :root{
+      --bg:#0f172a;
+      --panel:#111827;
+      --panel2:#1f2937;
+      --card:#ffffff;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --gold:#f59e0b;
+      --green:#10b981;
+      --red:#ef4444;
+      --blue:#3b82f6;
+      --border:rgba(255,255,255,0.08);
+      --shadow:0 10px 25px rgba(0,0,0,.18);
+      --radius:18px;
     }
-    .holding { border-left: 5px solid #f5b301; }
-    .muted { opacity: 0.82; border-left-color: #94a3b8; }
-    .price-box-green {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
+
+    * { box-sizing: border-box; }
+
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #0b1220 0%, #111827 100%);
+      color:var(--text);
     }
-    .price-box-red {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:18px;
     }
-    .btn-ok {
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      width: 28px;
-      height: 28px;
-      border-radius: 999px;
-      background: #64748b;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      border: 2px solid #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+
+    .hero{
+      background:linear-gradient(135deg,#111827,#1f2937);
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:22px;
+      box-shadow:var(--shadow);
+      margin-bottom:18px;
+    }
+
+    .hero h1{
+      margin:0 0 8px;
+      font-size:28px;
+      color:#fff;
+    }
+
+    .sub{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .grid{
+      display:grid;
+      gap:16px;
+    }
+
+    .grid-2{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .grid-3{
+      grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+
+    .card{
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+
+    .title{
+      margin:0 0 12px;
+      font-size:18px;
+      color:#fff;
+    }
+
+    .price-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:10px;
+    }
+
+    .price-box{
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .label{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+
+    .value{
+      font-size:28px;
+      font-weight:700;
+      color:#fff;
+    }
+
+    .buy-text{ color: #7dd3fc; }
+    .sell-text{ color: #fcd34d; }
+
+    .mini{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:8px;
+      line-height:1.5;
+    }
+
+    .stat-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+    }
+
+    .stat{
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:14px;
+    }
+
+    .stat .num{
+      font-size:22px;
+      font-weight:700;
+      margin-top:4px;
+      color:#fff;
+    }
+
+    .green{ color:var(--green)!important; }
+    .red{ color:var(--red)!important; }
+    .gold{ color:var(--gold)!important; }
+    .blue{ color:var(--blue)!important; }
+
+    .row{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    input, select, textarea, button{
+      width:100%;
+      border:none;
+      outline:none;
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:15px;
+    }
+
+    input, select, textarea{
+      background:#fff;
+      color:#111827;
+    }
+
+    textarea{
+      min-height:88px;
+      resize:vertical;
+    }
+
+    button{
+      background:linear-gradient(135deg,#f59e0b,#d97706);
+      color:#111827;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    button.secondary{
+      background:#334155;
+      color:#fff;
+    }
+
+    button.blue{
+      background:linear-gradient(135deg,#60a5fa,#2563eb);
+      color:#fff;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .actions button{
+      width:auto;
+      min-width:160px;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      border-radius:14px;
+      border:1px solid var(--border);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:720px;
+      background:rgba(255,255,255,.04);
+    }
+
+    th, td{
+      padding:12px 10px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+      font-size:14px;
+      white-space:nowrap;
+    }
+
+    th{
+      color:#cbd5e1;
+      background:rgba(255,255,255,.03);
+      position:sticky;
+      top:0;
+    }
+
+    .pill{
+      display:inline-block;
+      padding:5px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .pill-buy{ background:rgba(59,130,246,.15); color:#93c5fd; }
+    .pill-sell{ background:rgba(239,68,68,.15); color:#fca5a5; }
+
+    .status{
+      margin-top:10px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    .alert-box{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:14px;
+      display:none;
+      font-weight:700;
+    }
+
+    .alert-success{
+      background:rgba(16,185,129,.14);
+      color:#a7f3d0;
+      border:1px solid rgba(16,185,129,.28);
+    }
+
+    .alert-danger{
+      background:rgba(239,68,68,.12);
+      color:#fecaca;
+      border:1px solid rgba(239,68,68,.25);
+    }
+
+    .footer-note{
+      margin-top:18px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .loader{
+      display:inline-block;
+      width:16px;
+      height:16px;
+      border:2px solid rgba(255,255,255,.2);
+      border-top-color:#fff;
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+      vertical-align:middle;
+      margin-right:6px;
+    }
+
+    @keyframes spin{
+      to{ transform:rotate(360deg); }
+    }
+
+    @media (max-width: 860px){
+      .grid-2, .grid-3, .row, .stat-grid, .price-row{
+        grid-template-columns:1fr;
+      }
+      .value{
+        font-size:24px;
+      }
+      .hero h1{
+        font-size:24px;
+      }
+      .actions button{
+        width:100%;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="app-shell pb-24">
-    <header class="sticky top-0 z-20 bg-white border-b px-4 pt-7 pb-4">
-      <div class="flex items-center justify-between mb-3">
-        <h1 class="text-[20px] font-bold text-slate-800 italic">ล็อตทองคุณต้อม 🚐</h1>
-        <button id="refreshBtn" class="text-blue-600 text-[11px] font-bold uppercase tracking-wide">Refresh 🔄</button>
+  <div class="wrap">
+    <div class="hero">
+      <h1>InterGOLD Gold Tracker</h1>
+      <div class="sub">
+        เว็บแอปนี้ใช้ราคา InterGold 96.5% แบบเรียลไทม์เป็นตัวอ้างอิงสำหรับช่วยตัดสินใจ<br>
+        ซื้อ = ใช้ราคาขายออก / ขาย = ใช้ราคารับซื้อ
       </div>
+      <div class="status" id="topStatus">
+        <span class="loader"></span>กำลังโหลดข้อมูล...
+      </div>
+    </div>
 
-      <div class="grid grid-cols-2 gap-2 mb-2">
-        <div class="price-box-green rounded-xl p-3">
-          <p class="text-[10px] text-green-700 font-bold uppercase leading-tight">ราคารับซื้อ<br>ทองคำแท่ง</p>
-          <p id="buyBackPrice" class="text-[24px] font-bold text-green-700 leading-none mt-2">-</p>
+    <div class="grid grid-2">
+      <div class="card">
+        <h2 class="title">ราคาสดจาก InterGOLD</h2>
+        <div class="price-row">
+          <div class="price-box">
+            <div class="label">ราคารับซื้อ InterGold 96.5%</div>
+            <div class="value buy-text" id="intergoldBuy">--</div>
+            <div class="mini">ใช้สำหรับคำนวณตอน “ขาย”</div>
+          </div>
+          <div class="price-box">
+            <div class="label">ราคาขายออก InterGold 96.5%</div>
+            <div class="value sell-text" id="intergoldSell">--</div>
+            <div class="mini">ใช้สำหรับคำนวณตอน “ซื้อ”</div>
+          </div>
         </div>
-        <div class="price-box-red rounded-xl p-3">
-          <p class="text-[10px] text-red-700 font-bold uppercase leading-tight">ราคาขายออก<br>ทองคำแท่ง</p>
-          <p id="sellOutPrice" class="text-[24px] font-bold text-red-700 leading-none mt-2">-</p>
+
+        <div class="price-row">
+          <div class="price-box">
+            <div class="label">สมาคมฯ รับซื้อ</div>
+            <div class="value" id="assocBuy">--</div>
+          </div>
+          <div class="price-box">
+            <div class="label">สมาคมฯ ขายออก</div>
+            <div class="value" id="assocSell">--</div>
+          </div>
+        </div>
+
+        <div class="status" id="priceStatus">ยังไม่มีข้อมูลราคา</div>
+        <div class="actions">
+          <button class="blue" onclick="refreshAll()">รีเฟรชราคาและข้อมูล</button>
+        </div>
+
+        <div class="alert-box alert-success" id="profitAlertBox"></div>
+        <div class="alert-box alert-danger" id="lossAlertBox"></div>
+      </div>
+
+      <div class="card">
+        <h2 class="title">สรุปพอร์ต</h2>
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="label">ถือครอง (บาททอง)</div>
+            <div class="num gold" id="holdingQty">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">ต้นทุนเฉลี่ย / บาททอง</div>
+            <div class="num" id="avgCost">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">ต้นทุนรวม</div>
+            <div class="num" id="totalCostBasis">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">มูลค่าปัจจุบัน (ขายได้)</div>
+            <div class="num" id="marketValue">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">กำไร/ขาดทุนค้างอยู่</div>
+            <div class="num" id="unrealizedPnl">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">% กำไร/ขาดทุน</div>
+            <div class="num" id="pnlPercent">0%</div>
+          </div>
+          <div class="stat">
+            <div class="label">กำไรสะสมที่ปิดแล้ว</div>
+            <div class="num" id="realizedPnl">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">จำนวนรายการ Buy / Sell</div>
+            <div class="num" id="tradeCounts">0 / 0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px;">
+      <div class="card">
+        <h2 class="title">เครื่องคิดเลขตัดสินใจ</h2>
+        <div class="row">
+          <div class="field">
+            <label>โหมด</label>
+            <select id="calcMode" onchange="calculateQuick()">
+              <option value="BUY">ซื้อ</option>
+              <option value="SELL">ขาย</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>จำนวน (บาททอง)</label>
+            <input type="number" id="calcQty" placeholder="เช่น 1 หรือ 0.5" step="0.01" oninput="calculateQuick()">
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="label">ราคาที่ใช้คำนวณ</div>
+            <div class="num" id="calcPriceUsed">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">มูลค่ารวมโดยประมาณ</div>
+            <div class="num" id="calcTotal">0</div>
+          </div>
         </div>
       </div>
 
-      <div class="flex items-center justify-between text-[10px] text-slate-400">
-        <span id="priceDate">วันที่ราคา: -</span>
-        <span id="priceFetchedAt">อัปเดต: -</span>
+      <div class="card">
+        <h2 class="title">บันทึกรายการจริงหลังซื้อขายใน Gold2Go</h2>
+        <div class="row">
+          <div class="field">
+            <label>ประเภท</label>
+            <select id="tradeAction">
+              <option value="BUY">BUY</option>
+              <option value="SELL">SELL</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Source</label>
+            <input type="text" id="tradeSource" value="GOLD2GO">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>จำนวน (บาททอง)</label>
+            <input type="number" id="tradeQty" step="0.01" placeholder="เช่น 1">
+          </div>
+          <div class="field">
+            <label>ราคาจริงที่ execute</label>
+            <input type="number" id="tradePrice" step="0.01" placeholder="เช่น 72862">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>ค่าธรรมเนียม / ค่าบล็อก / อื่น ๆ</label>
+            <input type="number" id="tradeFee" step="0.01" value="0">
+          </div>
+          <div class="field">
+            <label>มูลค่ารวมคร่าว ๆ</label>
+            <input type="text" id="tradePreview" disabled>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>หมายเหตุ</label>
+          <textarea id="tradeNote" placeholder="เช่น ซื้อจริงใน Gold2Go รอบเย็น / มีค่าบล็อกเพิ่ม / ซื้อสะสม ฯลฯ"></textarea>
+        </div>
+
+        <div class="actions">
+          <button onclick="fillPriceFromLive('BUY')">ดึงราคาขายออกมาใส่</button>
+          <button class="secondary" onclick="fillPriceFromLive('SELL')">ดึงราคารับซื้อมาใส่</button>
+          <button class="blue" onclick="saveTrade()">บันทึกรายการ</button>
+        </div>
+
+        <div class="status" id="saveStatus">ยังไม่มีการบันทึกรายการ</div>
       </div>
-    </header>
 
-    <main class="p-3">
-      <div id="loading" class="text-center text-slate-400 text-xs italic py-10">กำลังเชื่อมต่อฐานข้อมูล...</div>
-      <div id="inventoryGrid" class="hidden space-y-2"></div>
-    </main>
+      <div class="card">
+        <h2 class="title">ประวัติรายการล่าสุด</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>เวลา</th>
+                <th>Action</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Gross</th>
+                <th>Fee</th>
+                <th>Net</th>
+                <th>Source</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody id="tradeTableBody">
+              <tr><td colspan="9">กำลังโหลดข้อมูล...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-    <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto flex justify-around items-center p-3 text-white text-[10px] rounded-t-2xl shadow-2xl z-30">
-      <a href="dashboard.html" class="flex flex-col items-center opacity-70 text-white no-underline">
-        <span class="text-sm">📊</span>
-        <span>รายงาน</span>
-      </a>
-      <a href="index.html" class="flex flex-col items-center font-bold text-white no-underline">
-        <span class="text-sm">📦</span>
-        <span>รายการทอง</span>
-      </a>
-      <button id="openNewLotBtn" class="flex flex-col items-center text-white">
-        <span class="text-sm">➕</span>
-        <span>บันทึกซื้อ</span>
-      </button>
-    </nav>
+    <div class="footer-note">
+      หมายเหตุ: หน้าเว็บนี้ใช้ราคา InterGold 96.5% ที่หน้า `gold-price` ของ InterGOLD เป็นราคาอ้างอิงแบบเรียลไทม์ โดยหน้าเดียวกันแสดงทั้ง `รับซื้อ` และ `ขายออก` สำหรับ InterGold 96.5% ชัดเจน จึงเหมาะสำหรับใช้เป็นฐานช่วยตัดสินใจในระบบของคุณครับ :contentReference[oaicite:1]{index=1}
+    </div>
   </div>
 
   <script>
-    // ====== ใส่ URL Web App ตัวใหม่ของคุณ ======
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzSzz9l91nT8UCpa8fc7N8__VzV0ldmt0lcYAeN44iiKnfr18KNzj69i4Qc6xhaVVNsvg/exec";
-
-    let appData = {
-      prices: null,
-      items: []
+    let appState = {
+      price: null,
+      portfolio: null,
+      trades: []
     };
 
-    document.getElementById('refreshBtn').addEventListener('click', fetchInventory);
-    document.getElementById('openNewLotBtn').addEventListener('click', openNewLotFlow);
+    let refreshTimer = null;
 
-    function formatNumber(num, digits = 0) {
-      const n = Number(num || 0);
-      return n.toLocaleString('en-US', {
+    function fmtNumber(n, digits = 2) {
+      const num = Number(n || 0);
+      return num.toLocaleString('en-US', {
         minimumFractionDigits: digits,
         maximumFractionDigits: digits
       });
     }
 
-    function formatThaiShortDate(isoString) {
-      if (!isoString) return '-';
-      const d = new Date(isoString);
-      if (isNaN(d.getTime())) return '-';
-      const day = d.getDate();
-      const month = d.getMonth() + 1;
-      const year = d.getFullYear() + 543;
-      return `${day}/${month}/${year}`;
+    function fmtCompact(n) {
+      const num = Number(n || 0);
+      return num.toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 4
+      });
     }
 
-    function formatDateTimeSmall(isoString) {
-      if (!isoString) return '-';
-      const d = new Date(isoString);
-      if (isNaN(d.getTime())) return '-';
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mm = String(d.getMinutes()).padStart(2, '0');
-      return `${formatThaiShortDate(isoString)} ${hh}:${mm}`;
+    function setText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
     }
 
-    function showLoading(show) {
-      document.getElementById('loading').classList.toggle('hidden', !show);
-      document.getElementById('inventoryGrid').classList.toggle('hidden', show);
+    function setHtml(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = text;
     }
 
-    async function fetchInventory() {
-      if (!WEB_APP_URL || WEB_APP_URL.includes('PASTE_YOUR')) {
-        alert('กรุณาใส่ WEB_APP_URL ใน index.html ก่อน');
+    function loadDashboard() {
+      setHtml('topStatus', '<span class="loader"></span>กำลังโหลดข้อมูล...');
+      google.script.run
+        .withSuccessHandler(onDashboardLoaded)
+        .withFailureHandler(onServerError)
+        .getDashboardData();
+    }
+
+    function refreshAll() {
+      loadDashboard();
+    }
+
+    function onDashboardLoaded(data) {
+      if (!data || !data.success) {
+        onServerError(data && data.error ? data.error : 'โหลดข้อมูลไม่สำเร็จ');
         return;
       }
 
-      try {
-        showLoading(true);
+      appState.price = data.price || null;
+      appState.portfolio = data.portfolio || null;
+      appState.trades = data.trades || [];
 
-        const res = await fetch(`${WEB_APP_URL}?action=inventory`);
-        const data = await res.json();
+      renderPrice(data.price);
+      renderPortfolio(data.portfolio);
+      renderTrades(data.trades);
+      calculateQuick();
+      updateTradePreview();
+      checkAlerts();
 
-        if (data.status !== 'success') {
-          throw new Error(data.message || 'โหลดข้อมูลไม่สำเร็จ');
-        }
-
-        appData = data;
-        renderHeader(data.prices);
-        renderInventory(data.items || []);
-
-        showLoading(false);
-      } catch (err) {
-        document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('inventoryGrid').classList.add('hidden');
-        document.getElementById('loading').innerHTML = `เกิดข้อผิดพลาด: ${err.message || err}`;
-      }
+      setText('topStatus', 'พร้อมใช้งานแล้ว');
     }
 
-    function renderHeader(prices) {
-      const buyBack = Number(prices?.buy_back || 0);
-      const sellOut = Number(prices?.sell_out || 0);
-
-      document.getElementById('buyBackPrice').textContent = buyBack > 0 ? formatNumber(buyBack, 0) : '-';
-      document.getElementById('sellOutPrice').textContent = sellOut > 0 ? formatNumber(sellOut, 0) : '-';
-      document.getElementById('priceDate').textContent = `วันที่ราคา: ${prices?.thai_date || '-'}`;
-      document.getElementById('priceFetchedAt').textContent = `อัปเดต: ${formatDateTimeSmall(prices?.fetched_at)}`;
-    }
-
-    function renderInventory(items) {
-      const grid = document.getElementById('inventoryGrid');
-      grid.innerHTML = '';
-
-      const holdingItems = items
-        .filter(item => String(item.status || '').toUpperCase() === 'HOLDING')
-        .sort((a, b) => Number(b.lot_id || 0) - Number(a.lot_id || 0));
-
-      renderNewLotCard(grid, items);
-
-      if (holdingItems.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'text-center text-slate-400 text-sm italic py-10';
-        empty.textContent = 'ยังไม่มีล็อตที่ถืออยู่';
-        grid.appendChild(empty);
+    function renderPrice(price) {
+      if (!price || !price.success) {
+        setText('intergoldBuy', '--');
+        setText('intergoldSell', '--');
+        setText('assocBuy', '--');
+        setText('assocSell', '--');
+        setText('priceStatus', 'ไม่สามารถโหลดราคาได้');
         return;
       }
 
-      holdingItems.forEach(item => {
-        const diffPct = Number(item.profit_pct || 0);
-        const profitAmount = Number(item.profit_amount || 0);
-        const currentValue = Number(item.current_value || 0);
-        const capital = Number(item.capital || 0);
-        const buyPrice = Number(item.buy_price || 0);
-        const isMuted = !!item.is_muted;
-        const shouldShowMuteBtn = diffPct >= 5 || diffPct <= -3;
+      setText('intergoldBuy', fmtNumber(price.intergoldBuy, 0));
+      setText('intergoldSell', fmtNumber(price.intergoldSell, 0));
+      setText('assocBuy', fmtNumber(price.associationBuy, 0));
+      setText('assocSell', fmtNumber(price.associationSell, 0));
 
-        const card = document.createElement('div');
-        card.className = `gold-card holding p-3 ${isMuted ? 'muted' : ''}`;
-
-        card.innerHTML = `
-          ${shouldShowMuteBtn ? `<button class="btn-ok" onclick="muteLot('${escapeJs(item.lot_id)}')" title="รับทราบ">OK</button>` : ''}
-          <div class="flex items-start justify-between gap-3">
-            <div class="w-[26%]">
-              <p class="text-[10px] text-slate-400 leading-none mb-1">${formatThaiShortDate(item.updated_at)}</p>
-              <p class="text-[14px] font-bold text-slate-800 leading-none">LOT ${escapeHtml(item.lot_id)}</p>
-              <p class="text-[10px] mt-2 font-medium ${isMuted ? 'text-slate-400' : 'text-amber-600'}">${isMuted ? 'MUTED' : 'HOLDING'}</p>
-            </div>
-
-            <div class="w-[34%] text-center border-l border-slate-100 pl-3">
-              <p class="text-[10px] text-slate-400 uppercase">เงินลงทุน</p>
-              <p class="text-[15px] font-bold text-blue-900 mt-1">฿${formatNumber(capital, 0)}</p>
-              <p class="text-[10px] text-slate-400 mt-1">@ ${formatNumber(buyPrice, 0)}</p>
-            </div>
-
-            <div class="w-[32%] text-right">
-              <p class="text-[10px] text-slate-400 uppercase">มูลค่าปัจจุบัน</p>
-              <p class="text-[15px] font-bold mt-1 ${diffPct >= 0 ? 'text-green-600' : 'text-red-600'}">฿${formatNumber(currentValue, 0)}</p>
-              <p class="text-[10px] font-bold mt-1 ${diffPct >= 0 ? 'text-green-500' : 'text-red-500'}">
-                ${profitAmount >= 0 ? '+' : ''}${formatNumber(profitAmount, 0)} (${diffPct.toFixed(2)}%)
-              </p>
-            </div>
-
-            <div class="flex items-center">
-              <button onclick="sellLot('${escapeJs(item.lot_id)}', ${Number(item.estimated_sell_value || 0)})"
-                class="bg-red-500 text-white px-3 py-2 rounded-xl text-[11px] font-bold shadow active:scale-95 transition">
-                ขาย
-              </button>
-            </div>
-          </div>
-        `;
-
-        grid.appendChild(card);
-      });
+      const status = `อัปเดตจาก InterGOLD: ${price.updatedText || '-'} | Source: gold-price`;
+      setText('priceStatus', status);
     }
 
-    function renderNewLotCard(container, allItems) {
-      let maxLotId = 0;
-      (allItems || []).forEach(item => {
-        const n = parseInt(item.lot_id, 10);
-        if (!isNaN(n) && n > maxLotId) maxLotId = n;
-      });
+    function renderPortfolio(p) {
+      if (!p) return;
 
-      const nextId = maxLotId + 1;
+      setText('holdingQty', fmtCompact(p.holdingQty));
+      setText('avgCost', fmtNumber(p.avgCost, 2));
+      setText('totalCostBasis', fmtNumber(p.totalCostBasis, 2));
+      setText('marketValue', fmtNumber(p.marketValue, 2));
+      setText('unrealizedPnl', fmtNumber(p.unrealizedPnl, 2));
+      setText('pnlPercent', fmtNumber(p.pnlPercent, 2) + '%');
+      setText('realizedPnl', fmtNumber(p.realizedPnl, 2));
+      setText('tradeCounts', `${p.buyCount || 0} / ${p.sellCount || 0}`);
 
-      const card = document.createElement('div');
-      card.className = 'gold-card border-dashed border-2 border-blue-200 bg-blue-50 p-4 mb-3';
-      card.innerHTML = `
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-[14px] font-bold text-blue-900">เปิด LOT ${nextId}</p>
-            <p class="text-[10px] text-blue-500 italic mt-1">พร้อมเข้าซื้อที่ราคาขายออกปัจจุบัน</p>
-          </div>
-          <button onclick="buyLot('${nextId}')"
-            class="bg-blue-600 text-white px-5 py-2 rounded-xl text-[11px] font-bold shadow active:scale-95 transition">
-            ซื้อเพิ่ม
-          </button>
-        </div>
-      `;
-      container.appendChild(card);
-    }
+      const pnlEl = document.getElementById('unrealizedPnl');
+      const pctEl = document.getElementById('pnlPercent');
 
-    function openNewLotFlow() {
-      let maxLotId = 0;
-      (appData.items || []).forEach(item => {
-        const n = parseInt(item.lot_id, 10);
-        if (!isNaN(n) && n > maxLotId) maxLotId = n;
-      });
-      const nextId = String(maxLotId + 1);
-      buyLot(nextId);
-    }
+      pnlEl.classList.remove('green', 'red');
+      pctEl.classList.remove('green', 'red');
 
-    async function buyLot(lotId) {
-      const sellOutPrice = Number(appData?.prices?.sell_out || 0);
-      const capital = prompt(`LOT ${lotId}: ลงทุนกี่บาท?`, '10000');
-      if (capital === null) return;
-
-      const buyPrice = prompt(`LOT ${lotId}: ราคาซื้อจริงต่อบาททองคำ?`, sellOutPrice > 0 ? String(Math.round(sellOutPrice)) : '');
-      if (buyPrice === null) return;
-
-      await postAction({
-        action: 'BUY',
-        lotId,
-        capital,
-        buyPrice
-      });
-    }
-
-    async function sellLot(lotId, estimatedSellValue) {
-      const defaultValue = estimatedSellValue > 0 ? Math.round(estimatedSellValue) : '';
-      const totalReceived = prompt(`LOT ${lotId}: ขายจริงได้เท่าไหร่?`, String(defaultValue));
-      if (totalReceived === null) return;
-
-      await postAction({
-        action: 'SELL',
-        lotId,
-        totalReceived
-      });
-    }
-
-    async function muteLot(lotId) {
-      const ok = confirm(`รับทราบแล้ว และต้องการหยุดเตือนสำหรับ LOT ${lotId} ใช่หรือไม่?`);
-      if (!ok) return;
-
-      await postAction({
-        action: 'MUTE',
-        lotId
-      });
-    }
-
-    async function postAction(payload) {
-      try {
-        showLoading(true);
-
-        const res = await fetch(WEB_APP_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-        if (data.status !== 'success') {
-          throw new Error(data.message || 'บันทึกไม่สำเร็จ');
-        }
-
-        await fetchInventory();
-      } catch (err) {
-        showLoading(false);
-        alert(`เกิดข้อผิดพลาด: ${err.message || err}`);
+      if (Number(p.unrealizedPnl) > 0) {
+        pnlEl.classList.add('green');
+        pctEl.classList.add('green');
+      } else if (Number(p.unrealizedPnl) < 0) {
+        pnlEl.classList.add('red');
+        pctEl.classList.add('red');
       }
+    }
+
+    function renderTrades(trades) {
+      const tbody = document.getElementById('tradeTableBody');
+      if (!trades || !trades.length) {
+        tbody.innerHTML = '<tr><td colspan="9">ยังไม่มีรายการ</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = trades.map(t => `
+        <tr>
+          <td>${escapeHtml(t.timestamp || '')}</td>
+          <td>
+            <span class="pill ${t.action === 'BUY' ? 'pill-buy' : 'pill-sell'}">
+              ${escapeHtml(t.action || '')}
+            </span>
+          </td>
+          <td>${fmtCompact(t.qtyBaht)}</td>
+          <td>${fmtNumber(t.unitPrice, 2)}</td>
+          <td>${fmtNumber(t.grossAmount, 2)}</td>
+          <td>${fmtNumber(t.fee, 2)}</td>
+          <td>${fmtNumber(t.netAmount, 2)}</td>
+          <td>${escapeHtml(t.source || '')}</td>
+          <td>${escapeHtml(t.note || '')}</td>
+        </tr>
+      `).join('');
+    }
+
+    function calculateQuick() {
+      const mode = document.getElementById('calcMode').value;
+      const qty = Number(document.getElementById('calcQty').value || 0);
+
+      let priceUsed = 0;
+      if (appState.price && appState.price.success) {
+        priceUsed = mode === 'BUY'
+          ? Number(appState.price.intergoldSell || 0)
+          : Number(appState.price.intergoldBuy || 0);
+      }
+
+      const total = qty * priceUsed;
+
+      setText('calcPriceUsed', fmtNumber(priceUsed, 2));
+      setText('calcTotal', fmtNumber(total, 2));
+    }
+
+    function fillPriceFromLive(mode) {
+      if (!appState.price || !appState.price.success) {
+        setText('saveStatus', 'ยังไม่มีราคาสดให้ดึง');
+        return;
+      }
+
+      const actionEl = document.getElementById('tradeAction');
+      const priceEl = document.getElementById('tradePrice');
+
+      if (mode === 'BUY') {
+        actionEl.value = 'BUY';
+        priceEl.value = Number(appState.price.intergoldSell || 0);
+      } else {
+        actionEl.value = 'SELL';
+        priceEl.value = Number(appState.price.intergoldBuy || 0);
+      }
+
+      updateTradePreview();
+    }
+
+    function updateTradePreview() {
+      const qty = Number(document.getElementById('tradeQty').value || 0);
+      const price = Number(document.getElementById('tradePrice').value || 0);
+      const fee = Number(document.getElementById('tradeFee').value || 0);
+      const action = document.getElementById('tradeAction').value;
+
+      const gross = qty * price;
+      const net = action === 'BUY' ? gross + fee : gross - fee;
+
+      document.getElementById('tradePreview').value = fmtNumber(net, 2);
+    }
+
+    function saveTrade() {
+      const payload = {
+        action: document.getElementById('tradeAction').value,
+        qtyBaht: Number(document.getElementById('tradeQty').value || 0),
+        unitPrice: Number(document.getElementById('tradePrice').value || 0),
+        fee: Number(document.getElementById('tradeFee').value || 0),
+        note: document.getElementById('tradeNote').value.trim(),
+        source: document.getElementById('tradeSource').value.trim() || 'GOLD2GO'
+      };
+
+      setText('saveStatus', 'กำลังบันทึกรายการ...');
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (!res || !res.success) {
+            setText('saveStatus', 'บันทึกไม่สำเร็จ: ' + ((res && res.error) || 'Unknown error'));
+            return;
+          }
+
+          setText('saveStatus', 'บันทึกรายการเรียบร้อยแล้ว');
+          clearTradeForm();
+          loadDashboard();
+        })
+        .withFailureHandler(function(err) {
+          setText('saveStatus', 'บันทึกไม่สำเร็จ: ' + err);
+        })
+        .saveTrade(payload);
+    }
+
+    function clearTradeForm() {
+      document.getElementById('tradeQty').value = '';
+      document.getElementById('tradePrice').value = '';
+      document.getElementById('tradeFee').value = '0';
+      document.getElementById('tradeNote').value = '';
+      updateTradePreview();
+    }
+
+    function checkAlerts() {
+      const profitBox = document.getElementById('profitAlertBox');
+      const lossBox = document.getElementById('lossAlertBox');
+      profitBox.style.display = 'none';
+      lossBox.style.display = 'none';
+
+      if (!appState.portfolio) return;
+      if (Number(appState.portfolio.holdingQty || 0) <= 0) return;
+
+      const pct = Number(appState.portfolio.pnlPercent || 0);
+
+      const reached5 = pct >= 5;
+      const reached3 = pct >= 3 && pct < 5;
+      const drop5 = pct <= -5;
+      const drop3 = pct <= -3 && pct > -5;
+
+      if (reached5) {
+        profitBox.style.display = 'block';
+        profitBox.textContent = `สัญญาณเตือน: กำไรแตะ ${fmtNumber(pct, 2)}% แล้ว (มากกว่าหรือเท่ากับ 5%)`;
+        playBeep();
+      } else if (reached3) {
+        profitBox.style.display = 'block';
+        profitBox.textContent = `สัญญาณเตือน: กำไรแตะ ${fmtNumber(pct, 2)}% แล้ว (มากกว่าหรือเท่ากับ 3%)`;
+      }
+
+      if (drop5) {
+        lossBox.style.display = 'block';
+        lossBox.textContent = `สัญญาณเตือน: ขาดทุน ${fmtNumber(pct, 2)}% แล้ว (น้อยกว่าหรือเท่ากับ -5%)`;
+        playBeep();
+      } else if (drop3) {
+        lossBox.style.display = 'block';
+        lossBox.textContent = `สัญญาณเตือน: ขาดทุน ${fmtNumber(pct, 2)}% แล้ว (น้อยกว่าหรือเท่ากับ -3%)`;
+      }
+    }
+
+    function playBeep() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 880;
+        gainNode.gain.value = 0.04;
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.start();
+        setTimeout(() => {
+          oscillator.stop();
+          audioCtx.close();
+        }, 220);
+      } catch (e) {
+        console.log('beep skipped', e);
+      }
+    }
+
+    function onServerError(err) {
+      const msg = typeof err === 'string' ? err : (err && err.message ? err.message : 'Server error');
+      setText('topStatus', 'เกิดข้อผิดพลาด: ' + msg);
+      setText('priceStatus', 'เกิดข้อผิดพลาด: ' + msg);
     }
 
     function escapeHtml(str) {
-      return String(str ?? '')
+      return String(str || '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replace(/'/g, '&#039;');
     }
 
-    function escapeJs(str) {
-      return String(str ?? '').replace(/'/g, "\\'");
-    }
+    document.getElementById('tradeQty').addEventListener('input', updateTradePreview);
+    document.getElementById('tradePrice').addEventListener('input', updateTradePreview);
+    document.getElementById('tradeFee').addEventListener('input', updateTradePreview);
+    document.getElementById('tradeAction').addEventListener('change', updateTradePreview);
 
-    window.onload = fetchInventory;
+    window.onload = function() {
+      loadDashboard();
+
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = setInterval(() => {
+        loadDashboard();
+      }, 10000); // refresh every 10 sec
+    };
   </script>
 </body>
 </html>
