@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gold Price Live - ราคาทองวันนี้</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            background-color: #1a1a1a; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0;
+            color: white;
+        }
+        .price-card {
+            background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
+            border: 2px solid #bd731d;
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 400px;
+        }
+        .gold-glow {
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+            color: #fbbf24;
+        }
+        .refresh-btn {
+            background-color: #bd731d;
+            transition: 0.3s;
+        }
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
+        #loading-dots:after {
+            content: ' .';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { color: rgba(0,0,0,0); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
+            40% { color: #fbbf24; text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
+            60% { text-shadow: .25em 0 0 #fbbf24, .5em 0 0 rgba(0,0,0,0); }
+            80%, 100% { text-shadow: .25em 0 0 #fbbf24, .5em 0 0 #fbbf24; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="price-card">
+        <div class="mb-4">
+            <span class="text-gray-400 text-sm uppercase tracking-widest font-light">ราคาทองคำแท่ง (ขายออก)</span>
+            <h1 class="text-xl font-bold text-white mt-1">สมาคมค้าทองคำ 🚐</h1>
+        </div>
+
+        <div id="price-container" class="py-8">
+            <div id="loading" class="text-2xl font-medium text-yellow-500 italic">
+                กำลังซิงค์ราคาจริง<span id="loading-dots"></span>
+            </div>
+            <div id="price-display" class="hidden">
+                <span class="text-6xl font-bold gold-glow" id="current-price">0</span>
+                <div class="text-gray-500 mt-4 text-sm" id="update-time">กำลังอัปเดต...</div>
+            </div>
+        </div>
+
+        <button onclick="getFreshPrice()" class="refresh-btn w-full py-4 rounded-xl text-lg font-bold shadow-lg mt-4 flex items-center justify-center gap-2">
+            <span>🔄</span> REFRESH PRICE
+        </button>
+
+        <a href="index.html" class="inline-block mt-8 text-gray-500 text-sm hover:text-white transition">
+            ← กลับหน้าจัดการพอร์ต
+        </a>
+    </div>
+
+    <script>
+        // ใช้ URL เดียวกับหน้าหลักเพื่อให้ดึงราคาจากบอทตัวเดียวกัน
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxJHieUe3b1zFhNe_cNRI9carKqdErE2QZHgXIG7Zqy2VHe-ugBWIThZACex4YNBgFS9g/exec";
+
+        async function getFreshPrice() {
+            const display = document.getElementById('price-display');
+            const loading = document.getElementById('loading');
+            const priceText = document.getElementById('current-price');
+            const timeText = document.getElementById('update-time');
+
+            try {
+                // แสดงสถานะโหลด
+                display.classList.add('hidden');
+                loading.classList.remove('hidden');
+
+                // ดึงราคาจริงจาก Server (หน้าที่บอทขูดไว้)
+                const res = await fetch(`${WEB_APP_URL}?page=live_price`);
+                const data = await res.json();
+
+                if(data.price && data.price !== "0") {
+                    priceText.innerText = Number(data.price).toLocaleString();
+                    
+                    // บันทึกเวลาที่อัปเดตล่าสุด
+                    const now = new Date();
+                    timeText.innerText = `อัปเดตล่าสุด: ${now.toLocaleTimeString('th-TH')} น.`;
+                    
+                    loading.classList.add('hidden');
+                    display.classList.remove('hidden');
+                } else {
+                    throw new Error("Price not ready");
+                }
+            } catch (e) {
+                loading.innerText = "เกิดข้อผิดพลาด ลองใหม่อีกครั้ง";
+                console.error(e);
+            }
+        }
+
+        // โหลดราคาครั้งแรกทันทีที่เปิดหน้า
+        window.onload = getFreshPrice;
+
+        // ตั้งให้ Auto Refresh ทุกๆ 1 นาทีในหน้านี้ด้วย
+        setInterval(getFreshPrice, 60000);
+    </script>
+</body>
+</html>
