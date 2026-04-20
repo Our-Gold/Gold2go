@@ -23,7 +23,7 @@
                 <button onclick="fetchInventory()" class="text-blue-500 text-[10px] font-bold uppercase tracking-wider">Refresh 🔄</button>
             </div>
             <div class="bg-yellow-50 p-2 rounded-lg border border-yellow-200 flex items-center gap-3">
-                <label class="text-[9px] text-yellow-700 font-bold uppercase leading-tight">ราคาตลาด<br>จำลอง:</label>
+                <label class="text-[9px] text-yellow-700 font-bold uppercase leading-tight">ราคาตลาด<br>(Auto Update):</label>
                 <input type="number" id="mock-price" value="43500" oninput="updateMockPrice(this.value)" class="flex-1 bg-white border border-yellow-300 rounded px-2 py-1 text-base font-bold text-yellow-800 focus:outline-none">
             </div>
         </header>
@@ -39,7 +39,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwqTbWpp1qOKyL6yf7dNurnkRI5JOQUf96td3iibtwL0S5nqoVsoFlvZszC25gyDwBW4A/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwlQn9fMd7octCUIMTTht69BMNoykSuAlXg44ZWASe1AZ2H4JFrnPDdX8qn_YOJfvNV9Q/exec"; 
         let currentData = [];
         let timer;
 
@@ -54,9 +54,19 @@
         async function fetchInventory() {
             try {
                 document.getElementById('loading').classList.remove('hidden');
+                
+                // 1. ดึงราคาออโต้จากบอทมาโชว์ในช่องเหลือง
+                const priceRes = await fetch(`${WEB_APP_URL}?page=live_price`);
+                const priceData = await priceRes.json();
+                if(priceData.price) {
+                    document.getElementById('mock-price').value = priceData.price;
+                }
+
+                // 2. ดึงรายการพอร์ตทอง
                 const res = await fetch(`${WEB_APP_URL}?page=inventory`);
                 currentData = await res.json();
                 renderInventory(currentData);
+                
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('inventory-grid').classList.remove('hidden');
             } catch (e) { document.getElementById('loading').innerHTML = "Error!"; }
