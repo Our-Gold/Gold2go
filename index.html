@@ -1,41 +1,104 @@
-async function handleAction(lotId, type) {
-    if (type === 'BUY') {
-        // ถามจำนวนเงินที่ลงทุน (ตั้งต้นไว้ที่ 10,000 หรือตามที่คุณต้อมเคยลง)
-        const capital = prompt("ระบุจำนวนเงินที่ลงทุน (บาท):", "10000");
-        const buyPrice = prompt("ระบุราคาทองขณะที่ซื้อ (บาทละ):", "42000"); // เก็บไว้เพื่อคำนวณ % เฉยๆ
-        
-        if (capital && buyPrice) {
-            await sendDataToSheet({ 
-                action: "BUY", 
-                lotId: lotId, 
-                capital: parseFloat(capital),
-                buyPrice: parseFloat(buyPrice)
-            });
-        }
-    } else if (type === 'SELL') {
-        const received = prompt("ระบุจำนวนเงินที่ได้รับทั้งหมดจากการขาย (รวมต้น+กำไร):", "");
-        if (received) {
-            await sendDataToSheet({ 
-                action: "SELL", 
-                lotId: lotId, 
-                totalReceived: parseFloat(received)
-            });
-        }
-    }
-}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>รายการล็อตคงเหลือ - คุณต้อม</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #f8f9fa; }
+        .nav-bar { background-color: #bd731d; }
+        .gold-card { border-radius: 15px; border-left: 5px solid #e2e8f0; transition: 0.2s; }
+        .holding { border-left-color: #fbbf24; }
+        .loader { border-top-color: #bd731d; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="pb-20">
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg">
+        <header class="p-4 pt-10 border-b flex justify-between items-center">
+            <h1 class="text-xl font-medium flex items-center gap-2">📋 รายการล็อตคงเหลือ</h1>
+            <button onclick="fetchInventory()" class="text-gray-400 text-sm italic">รีเฟรช 🔄</button>
+        </header>
 
-async function sendDataToSheet(payload) {
-    try {
-        const response = await fetch(WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        if (result.status === "success") {
-            alert("บันทึกสำเร็จ!");
-            location.reload();
+        <div id="loading" class="p-20 flex flex-col items-center">
+            <div class="loader rounded-full border-4 border-gray-100 h-10 w-10 mb-2"></div>
+            <p class="text-xs text-gray-400">กำลังเชื่อมต่อฐานข้อมูล...</p>
+        </div>
+
+        <div id="inventory-grid" class="p-3 space-y-3 hidden"></div>
+
+        <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around p-3 text-white text-[10px] rounded-t-xl shadow-2xl">
+            <div class="flex flex-col items-center opacity-60"><span>📊</span>รายงาน</div>
+            <div class="flex flex-col items-center"><span>📝</span>รายการทอง</div>
+            <div class="flex flex-col items-center opacity-60"><span>➕</span>บันทึกซื้อ</div>
+        </nav>
+    </div>
+
+    <script>
+        // *** วาง URL ที่ได้จากขั้นตอน Deploy ของคุณต้อมตรงนี้ ***
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwxO6Gp-yzSF2QDlLRsm7-B31HmRHWRLD4qa-1KsvUHrMJPKUUsmXT9WqOMlN0UZFhAEg/exec";
+
+        async function fetchInventory() {
+            try {
+                const res = await fetch(`${WEB_APP_URL}?page=inventory`);
+                let data = await res.json();
+                data.sort((a, b) => b.lot_id - a.lot_id); // เอาใหม่สุดขึ้นก่อน
+                render(data);
+            } catch (e) { alert("ดึงข้อมูลไม่สำเร็จ"); }
         }
-    } catch (error) {
-        alert("บันทึกล้มเหลว กรุณาตรวจสอบการ Deploy ใน Apps Script");
-    }
-}
+
+        function render(data) {
+            const grid = document.getElementById('inventory-grid');
+            grid.innerHTML = "";
+            data.forEach(item => {
+                const isHolding = item.status === "HOLDING";
+                const card = document.createElement('div');
+                card.className = `gold-card bg-white p-4 shadow-sm border ${isHolding ? 'holding' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-semibold text-gray-800">ล็อตที่ ${item.lot_id}</p>
+                            <p class="text-[10px] text-gray-400">${new Date(item.updated_at).toLocaleDateString('th-TH')}</p>
+                        </div>
+                        <button onclick="handleAction(${item.lot_id}, '${isHolding ? 'SELL' : 'BUY'}')" 
+                                class="${isHolding ? 'bg-red-500' : 'bg-blue-600'} text-white px-5 py-1 rounded-full text-xs font-bold shadow-sm">
+                            ${isHolding ? 'ขาย' : 'ซื้อ'}
+                        </button>
+                    </div>
+                    <div class="mt-3 flex justify-between text-xs text-blue-900 font-medium">
+                        <p>เงินต้น: <span class="underline">฿${Number(item.capital).toLocaleString()}</span></p>
+                        <p class="${isHolding ? 'text-green-600' : 'text-gray-300'}">เป้ากำไร: ${item.target_pct}%</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('inventory-grid').classList.remove('hidden');
+        }
+
+        async function handleAction(lotId, type) {
+            if (type === 'BUY') {
+                const cap = prompt("จำนวนเงินต้น (บาท):", "10000");
+                const price = prompt("ราคาทองขณะซื้อ (บาทละ):", "42000");
+                if (cap && price) await send({ action: "BUY", lotId, capital: cap, buyPrice: price });
+            } else {
+                const rec = prompt("ยอดเงินที่ขายได้จริง (รวมต้น+กำไร):", "");
+                if (rec) await send({ action: "SELL", lotId, totalReceived: rec });
+            }
+        }
+
+        async function send(payload) {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('inventory-grid').classList.add('hidden');
+            const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) });
+            const result = await res.json();
+            if (result.status === "success") { alert("สำเร็จ!"); fetchInventory(); }
+        }
+
+        window.onload = fetchInventory;
+    </script>
+</body>
+</html>
