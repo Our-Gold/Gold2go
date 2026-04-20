@@ -1,18 +1,29 @@
-// แก้ไขฟังก์ชัน handleAction ใน index.html เดิม
 async function handleAction(lotId, type) {
     if (type === 'BUY') {
-        const buyPrice = prompt("กรุณาระบุราคาทองที่คุณซื้อจริง (บาทละ):", "40500");
-        if (buyPrice != null && buyPrice != "") {
-            await sendDataToSheet({ action: "BUY", lotId: lotId, buyPrice: parseFloat(buyPrice) });
+        // ถามจำนวนเงินที่ลงทุน (ตั้งต้นไว้ที่ 10,000 หรือตามที่คุณต้อมเคยลง)
+        const capital = prompt("ระบุจำนวนเงินที่ลงทุน (บาท):", "10000");
+        const buyPrice = prompt("ระบุราคาทองขณะที่ซื้อ (บาทละ):", "42000"); // เก็บไว้เพื่อคำนวณ % เฉยๆ
+        
+        if (capital && buyPrice) {
+            await sendDataToSheet({ 
+                action: "BUY", 
+                lotId: lotId, 
+                capital: parseFloat(capital),
+                buyPrice: parseFloat(buyPrice)
+            });
         }
     } else if (type === 'SELL') {
-        if (confirm(`ยืนยันการขายถาดที่ ${lotId} และบันทึกกำไร?`)) {
-            await sendDataToSheet({ action: "SELL", lotId: lotId });
+        const received = prompt("ระบุจำนวนเงินที่ได้รับทั้งหมดจากการขาย (รวมต้น+กำไร):", "");
+        if (received) {
+            await sendDataToSheet({ 
+                action: "SELL", 
+                lotId: lotId, 
+                totalReceived: parseFloat(received)
+            });
         }
     }
 }
 
-// ฟังก์ชันส่งข้อมูลไป Web App URL
 async function sendDataToSheet(payload) {
     try {
         const response = await fetch(WEB_APP_URL, {
@@ -21,13 +32,10 @@ async function sendDataToSheet(payload) {
         });
         const result = await response.json();
         if (result.status === "success") {
-            alert("บันทึกข้อมูลเรียบร้อย!");
-            location.reload(); // รีเฟรชหน้าจอเพื่อดูการเปลี่ยนแปลง
-        } else {
-            alert("เกิดข้อผิดพลาด: " + result.message);
+            alert("บันทึกสำเร็จ!");
+            location.reload();
         }
     } catch (error) {
-        console.error("Error:", error);
-        alert("ไม่สามารถส่งข้อมูลได้ กรุณาตรวจสอบการ Deploy Web App");
+        alert("บันทึกล้มเหลว กรุณาตรวจสอบการ Deploy ใน Apps Script");
     }
 }
