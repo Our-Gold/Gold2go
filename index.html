@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gold Van Life - Thom Master Strategy</title>
+    <title>Gold Van Life - persistent Alert</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8f9fa; }
         .nav-bar { background-color: #bd731d; }
-        .gold-card { border-radius: 12px; border-left: 4px solid #e2e8f0; transition: 0.2s; margin-bottom: 8px; border: 1px solid #eee; }
+        .gold-card { border-radius: 12px; border-left: 4px solid #e2e8f0; transition: 0.2s; margin-bottom: 8px; border: 1px solid #eee; position: relative; }
         .holding { border-left-color: #fbbf24; background-color: #fff; }
-        .new-lot { border-left-color: #3b82f6; border-style: dashed; background-color: #eff6ff; }
+        .muted { border-left-color: #94a3b8; opacity: 0.8; }
+        .btn-mute { position: absolute; top: -5px; right: -5px; background: #64748b; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid white; shadow: sm; }
     </style>
 </head>
 <body class="pb-20">
     <div class="max-w-md mx-auto bg-white min-h-screen relative shadow-sm">
         <header class="p-3 pt-8 border-b sticky top-0 bg-white z-20 shadow-sm">
             <div class="flex justify-between items-center mb-2">
-                <h1 class="text-lg font-bold text-gray-800 italic">บริหารล็อตทองคุณต้อม 🚐</h1>
+                <h1 class="text-lg font-bold text-gray-800 italic">ล็อตทองคุณต้อม 🚐</h1>
                 <button onclick="fetchInventory()" class="text-blue-500 text-[10px] font-bold uppercase tracking-wider">Refresh 🔄</button>
             </div>
             <div class="bg-yellow-50 p-2 rounded-lg border border-yellow-200 flex items-center gap-3">
@@ -27,19 +28,18 @@
             </div>
         </header>
 
-        <div id="loading" class="p-10 text-center text-gray-400 text-xs italic font-light">กำลังเชื่อมต่อกลยุทธ์...</div>
+        <div id="loading" class="p-10 text-center text-gray-400 text-xs italic font-light">กำลังเชื่อมต่อฐานข้อมูล...</div>
         <div id="inventory-grid" class="p-2 hidden"></div>
 
         <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around items-center p-2 text-white text-[9px] rounded-t-xl shadow-2xl z-30">
             <a href="dashboard.html" class="flex flex-col items-center opacity-60 text-white no-underline"><span>📊</span>รายงาน</a>
             <a href="index.html" class="flex flex-col items-center font-bold text-white no-underline"><span>📝</span>รายการทอง</a>
-            <div class="flex flex-col items-center opacity-60"><span>➕</span>บันทึกซื้อ</div>
+            <div class="flex flex-col items-center opacity-60 pointer-events-none"><span>➕</span>บันทึกซื้อ</div>
         </nav>
     </div>
 
     <script>
-        // บรรทัดที่ 46: ใส่ URL ของคุณต้อมที่นี่
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzPLRsdFX1oIoJpKbLJ2m8iA8ufNNWkgJdfCDvtt5Y3jJu2J_mcek2XzQLkXKM9QPRz7g/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxwlLKIlmbHC1uDKDlSp-duUKPX4amAlp_A1PZLhqJrIKRwQNLXZJi9Rl8dtswYjyfxaQ/exec"; 
         let currentData = [];
         let timer;
 
@@ -76,31 +76,41 @@
                 const cap = parseFloat(item.capital) || 0;
                 const diff = ((mockPrice - buyP) / buyP) * 100;
                 const profit = (mockPrice - buyP) * (cap / buyP);
+                const isMuted = item.is_muted;
+
                 const card = document.createElement('div');
-                card.className = `gold-card p-2 px-3 shadow-sm holding`;
+                card.className = `gold-card p-2 px-3 shadow-sm holding ${isMuted ? 'muted' : ''}`;
                 card.innerHTML = `
+                    ${(diff >= 5 || diff <= -3) ? `<button onclick="muteAlert(${item.lot_id})" class="btn-mute" title="รับทราบ">OK</button>` : ''}
                     <div class="flex justify-between items-center">
-                        <div class="w-1/4"><p class="text-[11px] font-bold text-gray-800">LOT ${item.lot_id}</p><p class="text-[8px] text-yellow-600 font-medium italic">HOLDING</p></div>
+                        <div class="w-1/4"><p class="text-[11px] font-bold text-gray-800">LOT ${item.lot_id}</p><p class="text-[8px] ${isMuted ? 'text-gray-400' : 'text-yellow-600'} font-medium italic">${isMuted ? 'MUTED' : 'HOLDING'}</p></div>
                         <div class="w-1/3 text-center border-l border-gray-100">
-                            <p class="text-[8px] text-gray-400 uppercase leading-none">เงินลงทุน</p>
+                            <p class="text-[8px] text-gray-400 uppercase">เงินลงทุน</p>
                             <p class="text-[13px] font-bold text-blue-900 leading-none mt-1">฿${Number(cap).toLocaleString()}</p>
                             <p class="text-[8px] text-gray-400 mt-1">@ ${Number(buyP).toLocaleString()}</p>
                         </div>
                         <div class="w-1/3 text-right">
-                            <p class="text-[8px] text-gray-400 uppercase leading-none">มูลค่าพอร์ต</p>
+                            <p class="text-[8px] text-gray-400 uppercase">มูลค่าวันนี้</p>
                             <p class="text-[13px] font-bold ${diff >= 0 ? 'text-green-600' : 'text-red-600'} leading-none mt-1">฿${Math.round(cap + profit).toLocaleString()}</p>
                             <p class="text-[8px] font-bold mt-1 ${diff >= 0 ? 'text-green-500' : 'text-red-500'}">${diff >= 0 ? '+' : ''}${Math.round(profit)} (${diff.toFixed(1)}%)</p>
                         </div>
-                        <div class="ml-2"><button onclick="handleAction(${item.lot_id}, 'SELL', ${cap}, ${(cap+profit).toFixed(0)})" class="bg-red-500 text-white w-12 py-2 rounded-lg text-[10px] font-bold uppercase active:scale-95 transition">ขาย</button></div>
+                        <div class="ml-2"><button onclick="handleAction(${item.lot_id}, 'SELL', ${cap}, ${(cap+profit).toFixed(0)})" class="bg-red-500 text-white w-12 py-2 rounded-lg text-[10px] font-bold shadow-sm active:scale-95 transition">ขาย</button></div>
                     </div>`;
                 grid.appendChild(card);
             });
         }
 
+        async function muteAlert(lotId) {
+            if(confirm(`รับทราบราคานี้ และให้บอทหยุดเตือนสำหรับ LOT ${lotId} ใช่หรือไม่?`)) {
+                await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "MUTE", lotId: lotId }) });
+                fetchInventory();
+            }
+        }
+
         function renderNewLotButton(grid, nextId) {
             const btn = document.createElement('div');
-            btn.className = `gold-card p-3 px-4 shadow-sm new-lot mb-4`;
-            btn.innerHTML = `<div class="flex justify-between items-center"><div><p class="text-[11px] font-bold text-blue-800 tracking-tight">เปิด LOT ${nextId}</p><p class="text-[8px] text-blue-400 italic">พร้อมรอจังหวะเข้าครับคุณต้อม 🚐</p></div><button onclick="handleAction(${nextId}, 'BUY')" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-[10px] font-bold shadow-md uppercase active:scale-90 transition">บันทึกซื้อ</button></div>`;
+            btn.className = `gold-card p-3 px-4 shadow-sm border-dashed border-2 border-blue-200 bg-blue-50 mb-4`;
+            btn.innerHTML = `<div class="flex justify-between items-center"><div><p class="text-[11px] font-bold text-blue-800 tracking-tight">เปิด LOT ${nextId}</p><p class="text-[8px] text-blue-400 italic">พร้อมรอจังหวะเข้าครับ 🚐</p></div><button onclick="handleAction(${nextId}, 'BUY')" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-[10px] font-bold shadow-md uppercase active:scale-90 transition">ซื้อเพิ่ม</button></div>`;
             grid.appendChild(btn);
         }
 
@@ -108,13 +118,11 @@
             const mPrice = document.getElementById('mock-price').value;
             if (type === 'BUY') {
                 const cap = prompt(`LOT ${lotId}: ลงทุนกี่บาท?`, "10000");
-                const price = prompt(`LOT ${lotId}: ราคาทองที่เข้าซื้อ?`, mPrice);
+                const price = prompt(`LOT ${lotId}: ราคาทอง?`, mPrice);
                 if (cap && price) await send({ action: "BUY", lotId, capital: cap, buyPrice: price, currentMockPrice: mPrice });
             } else {
-                const rec = prompt(`LOT ${lotId}: ขายได้เงินทั้งหมดเท่าไหร่?`, estTotal);
-                if (rec) {
-                    if (confirm(`ยืนยันการขายเพื่อเก็บกำไร?`)) await send({ action: "SELL", lotId, totalReceived: rec, currentMockPrice: mPrice });
-                }
+                const rec = prompt(`LOT ${lotId}: ขายได้เท่าไหร่?`, estTotal);
+                if (rec) await send({ action: "SELL", lotId, totalReceived: rec, currentMockPrice: mPrice });
             }
         }
 
