@@ -114,7 +114,7 @@
         }
 
         async function muteAlert(lotId) {
-            if(confirm(`รับทราบราคานี้ และให้บอทหยุดเตือนสำหรับ LOT ${lotId} ใช่หรือไม่?`)) {
+            if(confirm(`หยุดเตือนสำหรับ LOT ${lotId}?`)) {
                 await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "MUTE", lotId: lotId }) });
                 fetchInventory();
             }
