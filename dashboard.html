@@ -3,69 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gold Van Life - Dashboard Fix</title>
+    <title>สรุปรายงานกำไร - คุณต้อม</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f0f2f5; }
+        body { font-family: 'Kanit', sans-serif; background-color: #f8f9fa; }
         .nav-bar { background-color: #bd731d; }
-        .stat-card { background: white; border-radius: 16px; padding: 1.25rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .report-card { border-radius: 20px; border: 1px solid #edf2f7; transition: 0.3s; }
+        .profit-text { color: #22c55e; }
     </style>
 </head>
 <body class="pb-24">
-    <div class="max-w-md mx-auto min-h-screen relative shadow-lg bg-white">
-        <header class="p-6 bg-white border-b text-center">
-            <h1 class="text-2xl font-bold text-gray-800">รายงานพอร์ต 📊</h1>
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg">
+        <header class="p-5 pt-12 flex justify-between items-center border-b">
+            <h1 class="text-xl font-bold flex items-center gap-2">📊 สรุปรายงานกำไร</h1>
+            <button onclick="fetchReports()" class="text-blue-500 text-sm font-medium">รีเฟรช 🔄</button>
         </header>
+
         <div id="content" class="p-4 space-y-4">
-            <div class="stat-card text-center border-t-4 border-yellow-500">
-                <p class="text-xs text-gray-400 uppercase font-bold">กำไร/ขาดทุนสุทธิวันนี้</p>
-                <p class="text-4xl font-black mt-2" id="total-profit">฿0</p>
-                <div class="inline-flex items-center px-4 py-1 rounded-full mt-2 text-sm font-bold" id="profit-pct">0%</div>
+            <div class="report-card bg-white p-6 shadow-sm border-t-4 border-green-400">
+                <p class="text-gray-400 text-xs mb-1">กำไรสุทธิทั้งหมด</p>
+                <h2 id="total-profit" class="text-3xl font-bold profit-text">฿0</h2>
+                <p class="text-[10px] text-gray-300 mt-2">* หักค่าธรรมเนียมถาดละ 10 บาทแล้ว</p>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="stat-card"><p class="text-[10px] text-gray-400 uppercase font-bold">เงินลงทุนรวม</p><p class="text-xl font-bold text-blue-900" id="total-cap">฿0</p></div>
-                <div class="stat-card"><p class="text-[10px] text-gray-400 uppercase font-bold">มูลค่าพอร์ตปัจจุบัน</p><p class="text-xl font-bold text-gray-800" id="total-val">฿0</p></div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="report-card bg-white p-4 shadow-sm">
+                    <p class="text-gray-400 text-[10px] mb-1">จำนวนครั้งที่ขาย</p>
+                    <h3 id="trade-count" class="text-lg font-bold">0 รอบ</h3>
+                </div>
+                <div class="report-card bg-white p-4 shadow-sm">
+                    <p class="text-gray-400 text-[10px] mb-1">เงินทุนหมุนเวียน</p>
+                    <h3 id="total-capital" class="text-lg font-bold text-blue-800">฿0</h3>
+                </div>
             </div>
-            <div class="stat-card text-center">
-                <p class="text-[10px] text-gray-400 font-bold mb-2">อ้างอิงราคา InterGOLD</p>
-                <div class="flex justify-around"><p class="text-red-600 font-bold" id="live-buy">0</p><p class="text-green-600 font-bold" id="live-sell">0</p></div>
+
+            <div class="report-card bg-white p-5 shadow-sm">
+                <h4 class="text-sm font-bold mb-4 border-b pb-2">ผลงานตามช่วงเวลา</h4>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">กำไรเดือนนี้</span>
+                        <span id="month-profit" class="font-bold text-gray-800">฿0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">สะสม 3 เดือน</span>
+                        <span id="three-month-profit" class="font-bold text-gray-800">฿0</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-dashed">
+                        <span class="text-gray-500 text-sm font-semibold">สะสมรายปี (2026)</span>
+                        <span id="year-profit" class="font-bold text-green-600 text-lg">฿0</span>
+                    </div>
+                </div>
             </div>
+
+            <h4 class="text-sm font-bold px-2 mt-6">ประวัติการขายล่าสุด</h4>
+            <div id="log-list" class="space-y-2">
+                </div>
         </div>
-        <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around items-center p-4 text-white text-[10px] rounded-t-2xl z-30">
-            <a href="dashboard.html" class="flex flex-col items-center font-bold text-white no-underline">📊<span>รายงาน</span></a>
-            <a href="index.html" class="flex flex-col items-center opacity-60 text-white no-underline">📝<span>รายการทอง</span></a>
+
+        <nav class="nav-bar fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around p-3 text-white text-[10px] rounded-t-xl shadow-2xl">
+            <a href="dashboard.html" class="flex flex-col items-center"><span>📊</span>รายงาน</a>
+            <a href="index.html" class="flex flex-col items-center opacity-60"><span>📝</span>รายการทอง</a>
+            <div class="flex flex-col items-center opacity-60"><span>➕</span>บันทึกซื้อ</div>
         </nav>
     </div>
+
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxJHieUe3b1zFhNe_cNRI9carKqdErE2QZHgXIG7Zqy2VHe-ugBWIThZACex4YNBgFS9g/exec";
-        async function load() {
-            const pRes = await fetch(`${WEB_APP_URL}?page=live_price`);
-            const pData = await pRes.json();
-            const curBuy = parseFloat(pData.buy);
-            document.getElementById('live-buy').innerText = "รับซื้อ: " + curBuy.toLocaleString();
-            document.getElementById('live-sell').innerText = "ขายออก: " + Number(pData.sell).toLocaleString();
-            const res = await fetch(`${WEB_APP_URL}?page=inventory`);
-            const inv = await res.json();
-            let cap = 0, profit = 0;
-            inv.filter(i => i.status === "HOLDING").forEach(i => {
-                const c = parseFloat(i.capital) || 0;
-                const b = parseFloat(i.buy_price) || 0;
-                cap += c;
-                if (b > 0) profit += (curBuy - b) * (c / b);
-            });
-            document.getElementById('total-cap').innerText = `฿${Math.round(cap).toLocaleString()}`;
-            document.getElementById('total-val').innerText = `฿${Math.round(cap + profit).toLocaleString()}`;
-            const pElem = document.getElementById('total-profit');
-            pElem.innerText = `${profit >= 0 ? '+' : ''}฿${Math.round(profit).toLocaleString()}`;
-            pElem.className = `text-4xl font-black mt-2 ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`;
-            const pctElem = document.getElementById('profit-pct');
-            const pct = cap > 0 ? (profit / cap) * 100 : 0;
-            pctElem.innerText = `${pct.toFixed(2)}%`;
-            pctElem.className = `inline-flex items-center px-4 py-1 rounded-full mt-2 text-sm font-bold ${profit >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyuXxG7qUllwBw4IN2o-O9s2NOnfJQnBxOTdn5O8gpWOV0nvUV6SArADjp5EpPeD7P83A/exec";
+
+        async function fetchReports() {
+            try {
+                const res = await fetch(`${WEB_APP_URL}?page=sales_log`);
+                const data = await res.json();
+                processData(data);
+            } catch (e) { alert("ดึงข้อมูลรายงานไม่สำเร็จ"); }
         }
-        window.onload = load;
+
+        function processData(data) {
+            let totalProfit = 0;
+            let totalCapital = 0;
+            let monthProfit = 0;
+            let threeMonthProfit = 0;
+            let yearProfit = 0;
+            
+            const now = new Date();
+            const logList = document.getElementById('log-list');
+            logList.innerHTML = "";
+
+            // เรียงข้อมูลล่าสุดขึ้นก่อน
+            data.reverse().forEach(item => {
+                // แปลงค่าให้เป็นเลขเสมอ (กัน NaN)
+                const p = parseFloat(item.net_profit) || 0;
+                const c = parseFloat(item.cost_value) || 0;
+                const date = new Date(item.sale_date);
+                
+                totalProfit += p;
+                totalCapital += c;
+
+                // เช็คช่วงเวลา
+                if (!isNaN(date.getTime())) {
+                    if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) monthProfit += p;
+                    if (now - date < (90 * 24 * 60 * 60 * 1000)) threeMonthProfit += p; // 90 วัน
+                    if (date.getFullYear() === 2026) yearProfit += p;
+
+                    // สร้าง UI รายการประวัติ
+                    const logItem = document.createElement('div');
+                    logItem.className = "bg-white p-3 rounded-xl border border-gray-100 flex justify-between items-center";
+                    logItem.innerHTML = `
+                        <div>
+                            <p class="text-xs font-bold text-gray-700">ล็อตที่ ${item.lot_id}</p>
+                            <p class="text-[9px] text-gray-400">${date.toLocaleDateString('th-TH')}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-green-600">+฿${p.toLocaleString()}</p>
+                            <p class="text-[9px] text-gray-400">จากทุน ฿${c.toLocaleString()}</p>
+                        </div>
+                    `;
+                    logList.appendChild(logItem);
+                }
+            });
+
+            // อัปเดตตัวเลขหน้าจอ
+            document.getElementById('total-profit').innerText = `฿${totalProfit.toLocaleString()}`;
+            document.getElementById('trade-count').innerText = `${data.length} รอบ`;
+            document.getElementById('total-capital').innerText = `฿${totalCapital.toLocaleString()}`;
+            document.getElementById('month-profit').innerText = `฿${monthProfit.toLocaleString()}`;
+            document.getElementById('three-month-profit').innerText = `฿${threeMonthProfit.toLocaleString()}`;
+            document.getElementById('year-profit').innerText = `฿${yearProfit.toLocaleString()}`;
+        }
+
+        window.onload = fetchReports;
     </script>
 </body>
 </html>
